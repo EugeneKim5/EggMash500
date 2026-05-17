@@ -1,1 +1,6 @@
-print("goon")
+print("chicken")
+print("chicken")
+print("chicken")
+print("chicken")
+print("chicken")
+print("chicken")
