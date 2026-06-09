@@ -6,3 +6,5 @@ if Age < 18:
 elif Age > 18:
     Name = input("Enter Your Name: ")
     print(f"The Current information we have are: {Name}, {Age}")
+
+print("chicken")
