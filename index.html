@@ -1,0 +1,3392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EggMash500© (Est. 2026)</title>
+  <link href="https://2fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              yellow: '#facc15',
+              green: '#22c55e',
+              red: '#ef4444'  
+            }
+          },
+          boxShadow: {
+            glow: '0 20px 90px rgba(255, 255, 255, 0.14)',
+            neon: '0 0 24px rgba(251, 191, 36, 0.22)'
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" defer></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { cursor: none !important; }
+    html {
+      scroll-behavior: auto;
+      overflow-y: scroll;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      scroll-padding-top: 1rem;
+    }
+    html::-webkit-scrollbar { width: 0; height: 0; }
+
+    body {
+      cursor: none;
+      font-family: 'Press Start 2P', monospace;
+      background-color: #050816;
+      color: #f8fafc;
+      image-rendering: pixelated;
+      text-shadow: 0 0 2px rgba(255,255,255,0.08);
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .pixel-cursor {
+      position: fixed;
+      top: 0; left: 0;
+      width: 44px; height: 44px;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.45));
+      transition: transform 0s linear, opacity 0.3s ease;
+      opacity: 0;
+    }
+    #loading-overlay { background-color: #050816 !important; border-radius: 40px; overflow: hidden; }
+    #loader-logo-container, .loader-content { border-radius: 32px; }
+    #react-market-root.opacity-0 { opacity: 0 !important; display: none; }
+    #react-market-root:not(.opacity-0) { display: block; }
+    .pixel-cursor img {
+      width: 100%; height: 100%;
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      user-select: none;
+      pointer-events: none;
+      transform: translateZ(0);
+    }
+    .pixel-cursor.cracking img {
+      animation: crack-scale 280ms ease-in-out;
+    }
+    @keyframes crack-scale {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08) translateY(-1px); }
+    }
+
+    button, div, a, svg, img { outline: none !important; -webkit-tap-highlight-color: transparent; }
+
+    .major-btn {
+      border-width: 3px; border-style: solid;
+      border-color: rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255,255,255,0.12);
+      border-radius: 12px;
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .major-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 0 1px rgba(255,255,255,0.16);
+    }
+    #egg-dropdown.show {
+      opacity: 1;
+      transform: translateY(5px) scale(1);
+      pointer-events: auto !important;
+    }
+    #egg-dropdown {
+      right: 0;
+      min-width: 22rem;
+      max-width: 28rem;
+      z-index: 999;
+    }
+    .egg-auth-pulse {
+      width: 10px;
+      height: 10px;
+      margin-left: 2px;
+    }
+    #egg-dropdown button { text-align: left; }
+    #egg-dropdown .disabled { opacity: 0.5; pointer-events: none; }
+
+    .retro-panel {
+      position: relative;
+      border: 3px solid rgba(255, 255, 255, 0.16);
+      background: rgba(9, 14, 34, 0.96);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255,255,255,0.05);
+      overflow: hidden;
+      border-radius: 16px;
+    }
+    .retro-panel::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 18px 18px;
+      opacity: 0.22;
+      pointer-events: none;
+    }
+
+    .console-card {
+      border: 3px solid rgba(255, 255, 255, 0.24);
+      background: rgba(12, 18, 44, 0.94);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 1.25rem;
+      transition: background 0.2s ease, transform 0.18s ease;
+      animation: crt-flicker 4.2s infinite;
+    }
+    .console-card:hover {
+      background: rgba(17, 24, 58, 0.98);
+      transform: translateY(-1px);
+    }
+    .console-header { animation: crt-flicker 4.2s infinite; animation-delay: 0.15s; }
+    .console-card h3 { letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.35rem; }
+
+    @keyframes crt-flicker {
+      0%, 100% { opacity: 1; filter: brightness(1); }
+      8% { opacity: 0.96; filter: brightness(0.95); }
+      14% { opacity: 0.98; filter: brightness(1.02); }
+      28% { opacity: 0.94; filter: brightness(0.93); }
+      45% { opacity: 0.99; filter: brightness(1); }
+      72% { opacity: 0.97; filter: brightness(0.96); }
+      85% { opacity: 0.995; filter: brightness(1.01); }
+    }
+
+    .console-card p { color: rgba(148, 163, 184, 0.82); }
+    .console-header {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem; margin-bottom: 0.95rem; padding-bottom: 0.6rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .console-title { font-size: 0.68rem; color: rgba(148, 163, 184, 0.78); letter-spacing: 0.3em; text-transform: uppercase; }
+
+    .status-line {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      font-size: 0.68rem; text-transform: uppercase;
+      color: rgba(132, 204, 22, 0.95); letter-spacing: 0.22em;
+    }
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 9999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.12);
+      animation: status-pulse 1.4s ease-in-out infinite;
+    }
+    .top-box .status-dot { animation: status-fade 2s ease-in-out infinite; box-shadow: 0 0 10px currentColor; }
+    .status-red .status-dot { background: #f87171; }
+    .status-red { color: #f87171 !important; }
+    .status-yellow .status-dot { background: #facc15; }
+    .status-yellow { color: #facc15 !important; }
+    .status-blue .status-dot { background: #3b82f6; }
+    .status-blue { color: #3b82f6 !important; }
+    .status-green .status-dot { background: #22c55e; }
+    .status-green { color: #22c55e !important; }
+
+    @keyframes status-fade {
+      0%, 100% { opacity: 1; filter: brightness(1.2) drop-shadow(0 0 4px currentColor); }
+      50% { opacity: 0.2; filter: brightness(0.8) drop-shadow(0 0 0px currentColor); }
+    }
+    @keyframes status-pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(255,255,255,0.12); }
+      50% { transform: scale(1.2); box-shadow: 0 0 0 6px rgba(255,255,255,0.08); }
+    }
+
+    @keyframes scan {
+      0% { transform: translateY(-10px); opacity: 0; }
+      15%, 85% { opacity: 1; }
+      100% { transform: translateY(120px); opacity: 0; }
+    }
+    .animate-scan { animation: scan 2.5s ease-in-out infinite; }
+
+    @keyframes slide-up {
+      0% { transform: translateY(30px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up { animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); }
+      75% { transform: translateX(-8px); }
+    }
+    .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+
+    .fade-reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.82s cubic-bezier(0.16, 1, 0.3, 1), transform 0.82s cubic-bezier(0.16, 1, 0.3, 1);
+      transition-delay: var(--fade-delay, 0ms);
+      will-change: opacity, transform;
+    }
+    .fade-reveal.visible { opacity: 1; transform: translateY(0); }
+
+    .top-box, .bottom-box {
+      transition: opacity 0.85s ease, transform 0.85s ease, filter 0.85s ease;
+      will-change: opacity, transform, filter;
+    }
+    .top-box.top-box-hidden, .bottom-box.bottom-box-hidden {
+      opacity: 0; filter: blur(2px); pointer-events: none;
+    }
+    .bottom-box.bottom-box-hidden { transform: translateY(18px); }
+
+    .footer-bar {
+      position: fixed; inset: auto 0 0 0;
+      z-index: 140;
+      display: flex; justify-content: center; align-items: center;
+      padding: 1rem 1.5rem;
+      background: rgba(7, 10, 26, 0.85);
+      backdrop-filter: blur(24px) saturate(180%);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      color: rgba(241, 245, 249, 0.9);
+      font-size: 0.8rem;
+      box-shadow: 0 -20px 50px -10px rgba(0, 0, 0, 0.5);
+    }
+    .footer-bar.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .footer-bar-inner {
+      width: min(1120px, calc(100% - 2rem));
+      display: flex; flex-wrap: wrap; justify-content: space-between;
+      gap: 0.75rem; align-items: center;
+    }
+    .footer-link { color: rgba(241, 245, 249, 0.72); text-decoration: none; transition: color 0.2s ease; }
+    .footer-link:hover { color: rgba(255, 255, 255, 0.95); }
+
+    .slow-typist {
+      display: block;
+      white-space: normal;
+      word-wrap: break-word;
+      min-height: 1.2em;
+      line-height: 1.5;
+    }
+    .slow-typist::after {
+      content: '▌'; display: inline-block; margin-left: 0.18rem;
+      vertical-align: bottom;
+      animation: flicker-cursor 0.75s steps(2, start) infinite alternate;
+      opacity: 1; color: currentColor;
+    }
+    .slow-typist.finished::after {
+      animation: flicker-cursor 0.75s steps(2, start) infinite alternate, pulse-cursor 1.2s ease-in-out infinite;
+    }
+    @keyframes flicker-cursor { 0% { opacity: 1; } 40% { opacity: 0.16; } 100% { opacity: 1; } }
+    @keyframes pulse-cursor {
+      0%, 100% { transform: translateX(2px) scaleY(1); }
+      50% { transform: translateX(2px) scaleY(1.2); }
+    }
+
+    .auth-slide-enter { opacity: 0; transform: translateX(10px); }
+    .auth-slide-enter-active { opacity: 1; transform: translateX(0); transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .auth-slide-exit { opacity: 1; transform: translateX(0); }
+    .auth-slide-exit-active { opacity: 0; transform: translateX(-10px); transition: opacity 0.2s ease, transform 0.2s ease; }
+
+    #scanlines {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 100% 6px;
+      pointer-events: none; mix-blend-mode: overlay; opacity: 0.22;
+    }
+
+    #hud {
+      position: absolute; inset: auto 0 0 0;
+      display: flex; justify-content: space-between; gap: 1rem;
+      padding: 1rem 1.25rem;
+      color: rgba(248,250,252,0.9);
+      text-transform: uppercase; letter-spacing: 0.2em;
+      pointer-events: none; z-index: 7;
+    }
+    .hud-panel {
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border: 2px solid rgba(248, 250, 252, 0.16);
+      background: rgba(7, 12, 30, 0.82);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+      border-radius: 10px; font-size: 0.7rem;
+    }
+    .hud-panel span { display: block; font-size: 0.65rem; color: rgba(148,163,184,0.8); }
+
+    #game-bg {
+      position: absolute; inset: 0; overflow: hidden;
+      background: linear-gradient(180deg, #0b1734 0%, #081025 42%, #050816 100%);
+      pointer-events: none;
+      transition: background 5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #game-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 20% 12%, rgba(147, 197, 253, 0.16), transparent 18%),
+                  radial-gradient(circle at 80% 8%, rgba(167, 139, 250, 0.14), transparent 16%);
+      pointer-events: none;
+    }
+
+    .sky-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+
+    .cloud {
+      position: absolute; width: 72px; height: 32px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 8' shape-rendering='crispEdges'><rect x='1' y='3' width='4' height='3' fill='%23ffffff'/><rect x='4' y='1' width='6' height='6' fill='%23ffffff'/><rect x='10' y='2' width='6' height='5' fill='%23ffffff'/></svg>");
+      background-repeat: no-repeat; background-position: center; background-size: contain;
+      image-rendering: pixelated; opacity: 0.95;
+      animation: cloud-slide linear infinite;
+    }
+    .cloud-1 { top: 10%; left: -180px; animation-duration: 38s; }
+    .cloud-2 { top: 18%; left: -220px; animation-duration: 46s; transform: scale(1.02); }
+    .cloud-3 { top: 26%; left: -140px; animation-duration: 32s; transform: scale(0.94); }
+    @keyframes cloud-slide {
+      from { transform: translateX(0); }
+      to { transform: translateX(calc(110vw + 340px)); }
+    }
+
+    .sky-stars { position: absolute; inset: 0; pointer-events: none; transition: opacity 3s ease-out; }
+    .pixel-star {
+      position: absolute; width: 4px; height: 4px;
+      background: rgba(255, 255, 255, 0.95);
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.28));
+      animation: star-blink 1.1s infinite alternate;
+    }
+    .pixel-star.star-1 { top: 8%; left: 12%; animation-delay: 0s; }
+    .pixel-star.star-2 { top: 16%; left: 28%; animation-delay: 0.2s; }
+    .pixel-star.star-3 { top: 22%; left: 66%; animation-delay: 0.4s; }
+    .pixel-star.star-4 { top: 30%; left: 18%; animation-delay: 0.35s; }
+    .pixel-star.star-5 { top: 6%; left: 78%; animation-delay: 0.5s; }
+    .pixel-star.star-6 { top: 42%; left: 52%; animation-delay: 0.15s; }
+    .pixel-star.star-7 { top: 10%; left: 44%; animation-delay: 0.6s; }
+    .pixel-star.star-8 { top: 36%; left: 84%; animation-delay: 0.3s; }
+    .pixel-star.star-9 { top: 50%; left: 20%; animation-delay: 0.7s; }
+    .pixel-star.star-10 { top: 18%; left: 58%; animation-delay: 0.85s; }
+    .pixel-star.star-11 { top: 26%; left: 72%; animation-delay: 0.95s; }
+    .pixel-star.star-12 { top: 46%; left: 36%; animation-delay: 0.25s; }
+    @keyframes star-blink {
+      0% { opacity: 0.2; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.3; transform: scale(1); }
+    }
+
+    .shooting-star {
+      position: absolute; width: 4px; height: 4px;
+      background: #ffffff; box-shadow: 0 0 0 #ffffff;
+      opacity: 0; pointer-events: none; transform-origin: center;
+      animation: shooting-star-drift 4.4s cubic-bezier(0.15, 0.7, 0.65, 0.95) forwards;
+      image-rendering: pixelated;
+    }
+    .shooting-star::before {
+      content: ''; position: absolute; right: 100%; top: 50%;
+      width: 220px; height: 4px; transform: translateY(-50%);
+      background-image: linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.62) 26%, rgba(255,255,255,0.35) 44%, rgba(255,255,255,0) 100%);
+      opacity: 0.92; image-rendering: pixelated;
+    }
+    .shooting-star::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      width: 10px; height: 10px; transform: translate(-50%, -50%);
+      background: #ffffff; opacity: 0.98; image-rendering: pixelated;
+    }
+    @keyframes shooting-star-drift {
+      0% { opacity: 0; transform: rotate(var(--star-angle, -12deg)) translateX(0) translateY(0); }
+      12% { opacity: 1; }
+      88% { opacity: 1; }
+      100% { opacity: 0; transform: rotate(var(--star-angle, -12deg)) translateX(calc(100vw + 280px)) translateY(12px); }
+    }
+
+    .celestial {
+      position: absolute;
+      width: 140px; height: 140px;
+      pointer-events: none;
+      z-index: 65;
+      image-rendering: pixelated;
+      overflow: visible;
+    }
+    #sun svg, #moon svg { overflow: visible; }
+
+    #moon {
+      top: 8%; right: 9%;
+      animation: moon-glow 6s ease-in-out infinite;
+    }
+
+    #sun {
+      top: 8%; right: 9%;
+      opacity: 0;
+    }
+
+    @keyframes moon-glow {
+      0%, 100% { filter: drop-shadow(0 0 28px rgba(147, 197, 253, 0.18)); }
+      50% { filter: drop-shadow(0 0 36px rgba(147, 197, 253, 0.26)); }
+    }
+    @keyframes sun-glow {
+      0%, 100% { filter: drop-shadow(0 0 32px rgba(250, 204, 21, 0.5)); }
+      50% { filter: drop-shadow(0 0 48px rgba(250, 204, 21, 0.75)); }
+    }
+
+    body.day-mode #game-bg {
+      background: linear-gradient(180deg, #1e6fd9 0%, #38bdf8 42%, #7dd3fc 100%);
+    }
+    body.day-mode .sky-stars { opacity: 0; }
+    body.day-mode .pixel-star { animation-play-state: paused; }
+
+    #moon {
+      transition:
+        transform 3.2s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity   2.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #sun {
+      transition:
+        transform 3.2s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity   2.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes moon-blink {
+      0%, 94%, 100% { opacity: 1; }
+      96%, 98% { opacity: 0; }
+    }
+    #moon-eyes { animation: moon-blink 4s infinite; }
+    #sun-eyes  { animation: moon-blink 3.6s infinite; }
+
+    #profile-eyes { animation: profile-blink 3.6s infinite; }
+    @keyframes profile-blink {
+      0%, 94%, 100% { opacity: 1; }
+      96%, 98% { opacity: 0; }
+    }
+    #header-profile:hover #profile-cap { transform: translateY(-3px); }
+    #profile-cap { transition: transform 0.2s ease; }
+
+    .pixel-title { text-shadow: 1px 1px 0 rgba(0,0,0,0.35), -1px -1px 0 rgba(255,255,255,0.08); }
+
+    .startup-grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 24px 24px; opacity: 0.12; pointer-events: none;
+      transition: opacity 0.24s ease, transform 0.24s ease, filter 0.24s ease;
+      background-position: 0 0;
+    }
+    .startup-grid.grid-active {
+      opacity: 0.24;
+      filter: saturate(1.4) brightness(1.08);
+      background-image: linear-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+    }
+
+    .runner {
+      position: absolute; left: 54%; bottom: 100px;
+      width: 38px; height: 58px;
+      background-size: contain; background-repeat: no-repeat;
+      image-rendering: pixelated;
+      animation: runner-bounce 0.36s ease-in-out infinite alternate, runner-run 0.2s steps(2) infinite;
+      z-index: 5; pointer-events: none;
+    }
+    @keyframes runner-run {
+      0% { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 64' shape-rendering='crispEdges'><rect x='10' y='0' width='12' height='12' fill='%23fde047'/><rect x='8' y='12' width='16' height='20' fill='%23f59e0b'/><rect x='6' y='32' width='20' height='8' fill='%23f59e0b'/><rect x='8' y='40' width='6' height='12' fill='%23111827'/><rect x='18' y='44' width='6' height='8' fill='%23111827'/><rect x='0' y='14' width='6' height='8' fill='%23111827'/><rect x='26' y='20' width='6' height='8' fill='%23111827'/></svg>"); }
+      100% { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 64' shape-rendering='crispEdges'><rect x='10' y='0' width='12' height='12' fill='%23fde047'/><rect x='8' y='12' width='16' height='20' fill='%23f59e0b'/><rect x='6' y='32' width='20' height='8' fill='%23f59e0b'/><rect x='8' y='44' width='6' height='8' fill='%23111827'/><rect x='18' y='40' width='6' height='12' fill='%23111827'/><rect x='0' y='20' width='6' height='8' fill='%23111827'/><rect x='26' y='14' width='6' height='8' fill='%23111827'/></svg>"); }
+    }
+    @keyframes runner-bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-6px); } }
+
+    .spaceship {
+      position: absolute; top: 18%; left: -120px;
+      width: 64px; height: 28px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28' shape-rendering='crispEdges'><rect x='0' y='8' width='64' height='12' fill='%2363b3ed'/><rect x='8' y='4' width='14' height='8' fill='%231f2937'/><rect x='18' y='2' width='20' height='8' fill='%23e2e8f0'/><rect x='40' y='8' width='18' height='8' fill='%232d3748'/><rect x='30' y='0' width='6' height='6' fill='%23fbbf24'/><rect x='52' y='8' width='10' height='10' fill='%23c7d2fe'/><rect x='0' y='4' width='10' height='12' fill='%23343f52'/></svg>");
+      background-size: contain; background-repeat: no-repeat;
+      image-rendering: pixelated; opacity: 0; z-index: 6;
+      pointer-events: none; transition: opacity 0.2s ease;
+    }
+
+    .coin {
+      position: absolute; width: 18px; height: 18px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' shape-rendering='crispEdges'><rect width='18' height='18' fill='none'/><rect x='2' y='2' width='14' height='14' fill='%23fbbf24'/><rect x='4' y='4' width='10' height='10' fill='%23fde68a'/><rect x='6' y='6' width='6' height='6' fill='%23f59e0b'/></svg>");
+      background-size: contain; background-repeat: no-repeat;
+      image-rendering: pixelated;
+      animation: coin-spin 0.5s steps(4) infinite, coin-float 1.2s ease-in-out infinite alternate;
+      z-index: 6; pointer-events: none;
+    }
+    @keyframes coin-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes coin-float { 0% { transform: translateY(0); } 100% { transform: translateY(-6px); } }
+
+    #tree-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 110;
+    }
+    #egg-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 115;
+    }
+
+    .pixel-tree {
+      position: absolute;
+      width: 64px; height: 128px;
+      pointer-events: none;
+      will-change: transform;
+      transform-origin: bottom center;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    .pixel-tree.visible { opacity: 1; }
+    .pixel-tree .tree-sway-wrapper { width: 100%; height: 100%; }
+    .pixel-tree svg { width: 100%; height: 100%; }
+
+    .falling-egg {
+      position: absolute; width: 32px; height: 32px;
+      pointer-events: none; z-index: 55;
+    }
+    .egg-splat { animation: splat-fade 2s forwards; }
+    @keyframes splat-fade {
+      0% { opacity: 1; transform: scale(1); }
+      70% { opacity: 1; transform: scale(1.1); }
+      100% { opacity: 0; transform: scale(1.3); }
+    }
+
+    .loader-log-entry { animation: log-flicker 0.1s ease-out; }
+    @keyframes log-flicker {
+      0% { opacity: 0; transform: translateX(-5px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    #loader-status {
+      text-shadow: 0 0 10px rgba(250,204,21,0.5);
+      animation: status-glitch 4s infinite;
+    }
+    @keyframes status-glitch {
+      0%, 90%, 100% { transform: skew(0); }
+      92% { transform: skew(10deg); color: #fff; }
+      94% { transform: skew(-10deg); color: #facc15; }
+      96% { transform: skew(5deg); }
+    }
+
+    .breeze-particle {
+      position: absolute; pointer-events: none; z-index: 4;
+      image-rendering: pixelated;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 4' shape-rendering='crispEdges'><rect width='16' height='2' fill='%23ffffff' opacity='0.8'/><rect x='4' y='2' width='20' height='2' fill='%23ffffff' opacity='0.5'/></svg>");
+      background-size: contain; background-repeat: no-repeat;
+      filter: drop-shadow(0 0 2px rgba(255,255,255,0.3));
+      animation: breeze-drift 4s linear forwards;
+    }
+    @keyframes breeze-drift {
+      0% { transform: translate(0, 0) scaleX(0.4); opacity: 0; }
+      10% { opacity: 0.9; transform: translate(50px, -5px) scaleX(1); }
+      90% { opacity: 0.9; transform: translate(750px, 5px) scaleX(1); }
+      100% { transform: translate(850px, 0) scaleX(0.4); opacity: 0; }
+    }
+
+    header {
+      transition:
+        transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity   0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        background 2.5s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 2.0s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform, opacity;
+    }
+    header.scrolled-away {
+      transform: translateY(-110%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #tree-layer {
+      will-change: transform;
+    }
+
+    body, header, .retro-panel, .console-card, .top-box,
+    .footer-bar, .major-btn, #header-profile {
+      transition:
+        background-color 2.5s cubic-bezier(0.4, 0, 0.2, 1),
+        background      2.5s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color    2.0s cubic-bezier(0.4, 0, 0.2, 1),
+        color           2.0s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow      2.0s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    h1, h2, h3, p, .console-title, .footer-link, .text-slate-300, .text-slate-400 {
+      transition: color 2.0s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Market greeting — modern animated header ── */
+    .market-greeting {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: clamp(28px, 4vw, 56px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 0%, #facc15 40%, #fbbf24 70%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: greeting-shimmer 4s ease-in-out infinite;
+      background-size: 200% 200%;
+    }
+    @keyframes greeting-shimmer {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes sub-shimmer {
+      0%   { background-position: 0% 50%; opacity: 0.7; }
+      50%  { background-position: 100% 50%; opacity: 1; }
+      100% { background-position: 0% 50%; opacity: 0.7; }
+    }
+    .market-greeting-sub {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(250, 204, 21, 0.55);
+    }
+    .market-greeting-cursor {
+      display: inline-block;
+      width: 3px;
+      height: 0.85em;
+      background: #facc15;
+      border-radius: 2px;
+      margin-left: 6px;
+      vertical-align: middle;
+      animation: greeting-cursor-blink 1s steps(1) infinite;
+      box-shadow: 0 0 12px rgba(250,204,21,0.7);
+    }
+    @keyframes greeting-cursor-blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .greeting-word {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: word-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes word-rise {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Search dropdown cursor fix */
+    #search-dropdown button { cursor: none !important; }
+
+
+    /* ── Market dropdown animation ── */
+    .market-dropdown {
+      transform: translateY(-10px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease, filter 0.22s ease;
+      filter: blur(0.8px);
+      will-change: opacity, transform;
+    }
+    .market-dropdown.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+      filter: blur(0);
+    }
+    .market-dropdown.closed {
+      transform: translateY(-10px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── Suggestion row hover ── */
+    .sugg-row { transition: background 0.2s ease, transform 0.2s ease; }
+    .sugg-row:hover { background: rgba(255,255,255,0.1) !important; transform: translateX(3px); }
+    .sugg-row:active { background: rgba(255,255,255,0.14) !important; }
+
+    /* ── Chart loading overlay ── */
+    @keyframes chart-fade-in  { from { opacity:0; } to { opacity:1; } }
+    @keyframes chart-fade-out { from { opacity:1; } to { opacity:0; } }
+    .chart-overlay-in  { animation: chart-fade-in  0.25s ease forwards; }
+    .chart-overlay-out { animation: chart-fade-out 0.2s ease forwards; }
+
+    @keyframes graph-draw { to { stroke-dashoffset: 0; } }
+    @keyframes area-fade { to { opacity: 1; } }
+    .stock-graph-line {
+      stroke-dasharray: 1200;
+      stroke-dashoffset: 1200;
+      animation: graph-draw 0.95s ease-out forwards;
+      transform-origin: center;
+    }
+    .stock-graph-area {
+      opacity: 0;
+      animation: area-fade 1s ease-out 0.1s forwards;
+    }
+    .chart-latest-dot {
+      position: absolute; width:14px; height:14px; border-radius:50%;
+      background:#facc15; border:2px solid rgba(8,12,30,0.95);
+      box-shadow:0 0 24px rgba(250,204,21,0.35);
+      transform:translate(-50%,-50%);
+      pointer-events:none; z-index:11;
+      animation: pulse-pt 1.8s ease-in-out infinite;
+    }
+    .chart-latest-label {
+      position:absolute; white-space:nowrap; padding:6px 10px;
+      font-size:10px; color:#f8fafc;
+      background:rgba(8,12,30,0.92); border:1px solid rgba(250,204,21,0.16);
+      border-radius:12; transform:translate(-50%,-140%);
+      pointer-events:none; z-index:11;
+    }
+
+    @keyframes pulse-pt {
+      0%,100% { transform: translate(-50%,-50%) scale(1); opacity:1; }
+      50% { transform: translate(-50%,-50%) scale(1.25); opacity:0.7; }
+    }
+
+    /* ── Hover dot on chart ── */
+    .chart-hover-dot {
+      position: absolute; width:14px; height:14px; border-radius:50%;
+      background:#fff; transform:translate(-50%,-50%);
+      pointer-events:none; z-index:10;
+      transition: left 0.04s linear, top 0.04s linear;
+    }
+    .chart-hover-vline {
+      position:absolute; top:0; bottom:0; width:1px;
+      background:rgba(255,255,255,0.18); pointer-events:none; z-index:9;
+      transform:translateX(-50%);
+      background-image: repeating-linear-gradient(to bottom, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 4px, transparent 4px, transparent 8px);
+    }
+    /* Search input focus ring */
+    .market-search-input:focus { border-color: rgba(250,204,21,0.6) !important; box-shadow: 0 0 0 3px rgba(250,204,21,0.08) !important; }
+
+    /* ── Security Alert Effects ── */
+    @keyframes security-pulse {
+      0%, 100% { box-shadow: inset 0 0 60px rgba(239, 68, 68, 0.4), 0 0 0 0px rgba(239, 68, 68, 0); }
+      50% { box-shadow: inset 0 0 140px rgba(239, 68, 68, 0.7), 0 0 40px 10px rgba(239, 68, 68, 0.2); }
+    }
+    .security-lock-glow {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      border: 8px solid rgba(239, 68, 68, 0.4);
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .security-lock-glow.active {
+      opacity: 1;
+      animation: security-pulse 1.5s infinite;
+    }
+    .screen-shake-hard {
+      animation: global-shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes global-shake {
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+      40%, 60% { transform: translate3d(6px, 0, 0); }
+    }
+
+    /* Universal spin keyframe for loading indicators */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="relative min-h-screen bg-slate-950 text-slate-50">
+  <div id="pixel-cursor" class="pixel-cursor">
+    <img id="pixel-cursor-img" src="" alt="Pixel cursor" />
+  </div>
+
+  <div id="security-effects-root"></div>
+
+  <div id="game-bg" class="pointer-events-none absolute inset-0 overflow-hidden">
+    <div class="sky-layer">
+      <div class="sky-stars">
+        <div class="pixel-star star-1"></div><div class="pixel-star star-2"></div>
+        <div class="pixel-star star-3"></div><div class="pixel-star star-4"></div>
+        <div class="pixel-star star-5"></div><div class="pixel-star star-6"></div>
+        <div class="pixel-star star-7"></div><div class="pixel-star star-8"></div>
+        <div class="pixel-star star-9"></div><div class="pixel-star star-10"></div>
+        <div class="pixel-star star-11"></div><div class="pixel-star star-12"></div>
+      </div>
+      <div id="shooting-star-layer" class="pointer-events-none absolute inset-0"></div>
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="cloud cloud-3"></div>
+
+      <div id="moon" class="celestial">
+        <svg id="moon-svg" width="140" height="140" viewBox="0 0 17 17" shape-rendering="crispEdges">
+          <rect width="17" height="17" fill="transparent" />
+          <g id="moon-body">
+            <g fill="#dbeafe">
+              <rect x="8" y="0" width="1" height="1"/><rect x="5" y="1" width="7" height="1"/>
+              <rect x="3" y="2" width="11" height="1"/><rect x="2" y="3" width="13" height="1"/>
+              <rect x="2" y="4" width="13" height="1"/><rect x="1" y="5" width="15" height="1"/>
+              <rect x="1" y="6" width="15" height="1"/><rect x="1" y="7" width="15" height="1"/>
+              <rect x="1" y="8" width="15" height="1"/><rect x="1" y="9" width="15" height="1"/>
+              <rect x="1" y="10" width="15" height="1"/><rect x="1" y="11" width="15" height="1"/>
+              <rect x="2" y="12" width="13" height="1"/><rect x="2" y="13" width="13" height="1"/>
+              <rect x="3" y="14" width="11" height="1"/><rect x="5" y="15" width="7" height="1"/>
+              <rect x="8" y="16" width="1" height="1"/>
+            </g>
+            <g fill="#f8fafc" opacity="0.9">
+              <rect x="3" y="3" width="2" height="2"/>
+              <rect x="10" y="4" width="1" height="1"/>
+              <rect x="12" y="6" width="2" height="1"/>
+            </g>
+          </g>
+          <g id="moon-eyes">
+            <rect class="pupil-l" x="6" y="5" width="1" height="1" fill="#0f172a"/>
+            <rect class="pupil-r" x="10" y="5" width="1" height="1" fill="#0f172a"/>
+          </g>
+          <g id="moon-mouths">
+            <g class="mouth-smile">
+              <rect x="6" y="12" width="5" height="1" fill="#0f172a"/>
+              <rect x="5" y="11" width="1" height="1" fill="#0f172a"/>
+              <rect x="11" y="11" width="1" height="1" fill="#0f172a"/>
+            </g>
+            <rect class="mouth-shock" x="7" y="10" width="3" height="2" fill="#0f172a" visibility="hidden"/>
+          </g>
+        </svg>
+      </div>
+
+      <div id="sun" class="celestial">
+        <svg id="sun-svg" width="140" height="140" viewBox="0 0 21 21" shape-rendering="crispEdges">
+          <rect width="21" height="21" fill="transparent"/>
+          <g id="sun-rays" opacity="0.85">
+            <rect x="9" y="0" width="3" height="2" fill="#fbbf24"/>
+            <rect x="9" y="19" width="3" height="2" fill="#fbbf24"/>
+            <rect x="0" y="9" width="2" height="3" fill="#fbbf24"/>
+            <rect x="19" y="9" width="2" height="3" fill="#fbbf24"/>
+            <rect x="2" y="2" width="2" height="2" fill="#fcd34d"/>
+            <rect x="17" y="2" width="2" height="2" fill="#fcd34d"/>
+            <rect x="2" y="17" width="2" height="2" fill="#fcd34d"/>
+            <rect x="17" y="17" width="2" height="2" fill="#fcd34d"/>
+          </g>
+          <g id="sun-body">
+            <g fill="#fde047">
+              <rect x="9" y="2" width="3" height="1"/><rect x="7" y="3" width="7" height="1"/>
+              <rect x="5" y="4" width="11" height="1"/><rect x="4" y="5" width="13" height="1"/>
+              <rect x="4" y="6" width="13" height="1"/><rect x="3" y="7" width="15" height="1"/>
+              <rect x="3" y="8" width="15" height="1"/><rect x="3" y="9" width="15" height="1"/>
+              <rect x="3" y="10" width="15" height="1"/><rect x="3" y="11" width="15" height="1"/>
+              <rect x="3" y="12" width="15" height="1"/><rect x="3" y="13" width="15" height="1"/>
+              <rect x="4" y="14" width="13" height="1"/><rect x="4" y="15" width="13" height="1"/>
+              <rect x="5" y="16" width="11" height="1"/><rect x="7" y="17" width="7" height="1"/>
+              <rect x="9" y="18" width="3" height="1"/>
+            </g>
+            <g fill="#fef08a" opacity="0.7">
+              <rect x="5" y="5" width="3" height="2"/>
+              <rect x="13" y="6" width="2" height="1"/>
+              <rect x="15" y="8" width="1" height="2"/>
+            </g>
+          </g>
+          <g id="sun-eyes">
+            <rect class="pupil-l" x="8" y="8" width="1" height="1" fill="#92400e"/>
+            <rect class="pupil-r" x="12" y="8" width="1" height="1" fill="#92400e"/>
+          </g>
+          <g id="sun-mouths">
+            <g class="mouth-smile">
+              <rect x="8" y="14" width="5" height="1" fill="#92400e"/>
+              <rect x="7" y="13" width="1" height="1" fill="#92400e"/>
+              <rect x="13" y="13" width="1" height="1" fill="#92400e"/>
+            </g>
+            <rect class="mouth-shock" x="9" y="12" width="3" height="2" fill="#92400e" visibility="hidden"/>
+          </g>
+        </svg>
+      </div>
+
+    </div>
+    <div id="scanlines"></div>
+    <div id="coin-layer" class="pointer-events-none absolute inset-0"></div>
+    <div id="spaceship" class="spaceship"></div>
+  </div>
+
+  <div id="tree-layer"></div>
+  <div id="egg-layer"></div>
+
+  <div class="relative z-[120]">
+    <header class="sticky top-0 z-[150] border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-4">
+        <button id="logo-button" class="relative flex items-center gap-3 transition-transform duration-200 hover:scale-105 active:scale-95" type="button">
+          <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-[26px] bg-white/10 shadow-glow border border-white/10">
+            <img src="logo.png" alt="Egg icon" class="h-full w-full object-contain" />
+          </div>
+          <div class="text-left">
+            <p class="text-xs uppercase tracking-[0.3em] text-slate-300/70">EggMash500©</p>
+            <h1 class="text-lg font-semibold text-white">Trade Now. Mass Success Later.</h1>
+          </div>
+        </button>
+        <nav class="flex flex-wrap gap-3">
+          <button data-page="home"     class="major-btn rounded-[14px] border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition duration-150 hover:border-brand-yellow hover:bg-brand-yellow/10 hover:text-white">Home</button>
+          <button data-page="services" class="major-btn rounded-[14px] border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition duration-150 hover:border-brand-green hover:bg-brand-green/10 hover:text-white">Services</button>
+          <button data-page="blog"     class="major-btn rounded-[14px] border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition duration-150 hover:border-brand-red hover:bg-brand-red/10 hover:text-white">Blog</button>
+          <button data-page="contact"  class="major-btn rounded-[14px] border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition duration-150 hover:border-white/20 hover:bg-white/10 hover:text-white">Contact</button>
+        </nav>
+        <div class="relative flex items-center gap-3">
+          <div id="header-plan-badge" class="hidden items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
+            <div class="w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse"></div>
+            <span id="header-plan-text" class="text-[8px] font-black uppercase tracking-widest text-slate-300">Shell Account</span>
+          </div>
+          <button id="header-profile" type="button" class="flex h-14 w-14 items-center justify-center rounded-[18px] bg-white/5 shadow-glow border border-white/10 transition duration-150 hover:bg-white/10 cursor-pointer">
+            <svg id="profile-svg" width="44" height="44" viewBox="0 0 16 16" shape-rendering="crispEdges">
+              <rect x="5" y="13" width="6" height="1" fill="#f8fafc"/>
+              <rect x="4" y="11" width="8" height="2" fill="#f8fafc"/>
+              <rect x="3" y="8" width="10" height="3" fill="#f8fafc"/>
+              <rect x="3" y="7" width="2" height="1" fill="#f8fafc"/>
+              <rect x="6" y="7" width="1" height="1" fill="#f8fafc"/>
+              <rect x="9" y="7" width="1" height="1" fill="#f8fafc"/>
+              <rect x="11" y="7" width="2" height="1" fill="#f8fafc"/>
+              <rect x="5" y="4" width="6" height="5" fill="#facc15"/>
+              <g id="profile-eyes">
+                <rect id="profile-pupilL" x="6" y="5" width="1" height="1" fill="#0f172a"/>
+                <rect id="profile-pupilR" x="9" y="5" width="1" height="1" fill="#0f172a"/>
+              </g>
+              <g id="profile-cap" transform="translate(0,-1)">
+                <rect x="5" y="0" width="6" height="1" fill="#f8fafc"/>
+                <rect x="4" y="1" width="8" height="1" fill="#f8fafc"/>
+                <rect x="3" y="2" width="10" height="2" fill="#f8fafc"/>
+                <rect x="3" y="4" width="1" height="1" fill="#f8fafc"/>
+                <rect x="5" y="4" width="2" height="1" fill="#f8fafc"/>
+                <rect x="9" y="4" width="1" height="1" fill="#f8fafc"/>
+                <rect x="11" y="4" width="2" height="1" fill="#f8fafc"/>
+              </g>
+            </svg>
+          </button>
+          <div id="egg-dropdown" class="absolute right-0 top-full z-50 mt-3 w-auto min-w-[22rem] max-w-[28rem] rounded-[28px] border border-white/10 bg-slate-950/95 p-3 shadow-neon backdrop-blur-xl opacity-0 scale-95 pointer-events-none transition-all duration-200" style="transform: translateY(-5px) scale(0.95);">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-[9px] uppercase tracking-[0.3em] text-slate-400 font-semibold">
+                <span>EggAuth</span>
+                <span class="status-dot status-blue egg-auth-pulse"></span>
+              </div>
+              <button id="egg-login-btn" type="button" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white transition hover:border-brand-yellow hover:bg-brand-yellow/10">Login</button>
+              <button id="egg-signup-btn" type="button" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white transition hover:border-brand-green hover:bg-brand-green/10">Signup</button>
+              <button id="egg-account-btn" type="button" class="hidden w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white transition hover:border-brand-yellow hover:bg-brand-yellow/10">Account</button>
+              <div class="border-t border-white/10 my-2"></div>
+              <button id="egg-signout-btn" type="button" class="w-full rounded-2xl border border-white/10 bg-red-500/10 px-4 py-3 text-left text-sm font-semibold text-red-300 transition hover:bg-red-500/20">Sign out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-[1040px] px-5 pb-24 pt-6" style="transition:width 220ms ease">
+      <div id="react-hero-root"></div>
+
+      <section id="home" class="page-section rounded-[40px] retro-panel p-8 shadow-neon relative min-h-[460px]" style="border-radius:40px; background:rgba(8,12,30,0.96); border:2px solid rgba(255,255,255,0.06);">
+        <div id="home-static-content" class="flex flex-col gap-6 transition-all duration-700">
+          <div class="top-box rounded-[24px] border-2 border-white/10 bg-white/5 p-6 shadow-inner" style="border-radius:24px; background: rgba(255,255,255,0.04);">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="status-line status-yellow"><span class="status-dot"></span></div>
+              <span class="text-[10px] uppercase tracking-[0.3em] text-slate-400 font-bold">Authorized Broadcast</span>
+            </div>
+            <p class="slow-typist text-sm leading-relaxed text-slate-200" data-text="WELCOME TO EGGMASH500. YOLK ALPHA 1.0.0 INITIALIZED. DEPLOYING HIGH-PROBABILITY DATA SHELLS. STANDBY FOR FINANCIAL OVER EASY..."></p>
+          </div>
+          <div class="inline-flex items-center gap-3 rounded-full bg-brand-yellow/10 px-4 py-2 text-sm font-semibold text-brand-yellow w-fit">Authorized Hatchery</div>
+          <h2 class="text-3xl font-semibold text-white">Quantitative Logic. No Yolks Aside.</h2>
+          <p class="max-w-3xl text-slate-300">EggMash500 is the authorized institutional terminal for AI-powered price per share predictions. Our YOLK Alpha 1.0.0 model calculates market volatility so you can manage your shell with surgical precision and zero yolk-loss.</p>
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div class="console-card">
+              <div class="console-header">
+                <div class="console-title">AI CORE</div>
+                <div class="status-line status-green"><span class="status-dot"></span>YOLK v1.0.0</div>
+              </div>
+              <h3 class="font-semibold text-white">The Golden Ratio</h3>
+              <p class="mt-3 text-slate-400">Our model identifies potential rises and declines before they break, keeping your portfolio hard-boiled against volatility.</p>
+            </div>
+            <div class="console-card">
+              <div class="console-header">
+                <div class="console-title">MARKET</div>
+                <div class="status-line status-yellow"><span class="status-dot"></span>WHIPPED</div>
+              </div>
+              <h3 class="font-semibold text-white">Sector Scrambling</h3>
+              <p class="mt-3 text-slate-400">Review various sectors of the global stock market with integrated quantitative metrics that separate the yolk from the white.</p>
+            </div>
+          </div>
+        </div>
+        <div id="react-market-root" class="relative opacity-0 pointer-events-none transition-all duration-1000 translate-y-12"></div>
+      </section>
+
+      <section id="services" class="page-section hidden rounded-[40px] retro-panel p-8 shadow-neon">
+        <div class="flex flex-col gap-8">
+          <div class="top-box rounded-[24px] border-2 border-brand-green/20 bg-brand-green/5 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="status-line status-green"><span class="status-dot"></span></div>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-brand-green font-bold">Utility Component</span>
+              </div>
+              <div class="text-[8px] text-brand-green/50 font-mono">PLAN_MANAGER_v1.0.0</div>
+            </div>
+            <p class="slow-typist text-sm leading-relaxed text-slate-200" data-text="SELECT YOUR SUBSCRIPTION COMPONENT. UPGRADE TO UNLOCK YOLK ALPHA 1.0.0 ANALYTICS AND INSTITUTIONAL-GRADE OMELETS."></p>
+          </div>
+          <div class="flex flex-col gap-4">
+            <div class="inline-flex items-center gap-3 rounded-full bg-brand-green/10 px-4 py-2 text-sm font-semibold text-brand-green w-fit">Operational Tiers</div>
+            <h2 class="text-4xl font-semibold text-white">Scale Your Hatchery Position</h2>
+            <p class="max-w-3xl text-slate-300">From entry-level shells to enterprise-grade omelets, our infrastructure ensures your portfolio remains perfectly poached.</p>
+          </div>
+          
+          <div class="grid gap-6 md:grid-cols-3">
+            <!-- Shell Tier (Free) -->
+            <div class="console-card group relative border-white/20">
+              <div class="console-header">
+                <div class="flex items-center gap-3">
+                  <div class="console-title">Tier 1</div>
+                  <span class="text-[7px] font-black text-brand-yellow/60 uppercase tracking-[0.2em] px-2 py-1 rounded border border-brand-yellow/20 bg-brand-yellow/5">Active by Default</span>
+                </div>
+                <div class="status-line status-yellow"><span class="status-dot"></span>FREE</div>
+              </div>
+              <div class="mb-4">
+                <h3 class="text-2xl font-bold text-white mb-2">Shell</h3>
+              </div>
+              <p class="text-slate-400 text-xs mb-6">Entry-level shell access. Essential metrics for the casual trader who prefers their risk hard-boiled.</p>
+              <ul class="space-y-3 mb-8 text-[10px] text-slate-300 font-mono">
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Standard Ticker Scanning</li>
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Basic Price Share Charts</li>
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Basic Shell Protection</li>
+              </ul>
+              <button class="w-full py-3 rounded-xl border-2 border-white/10 bg-white/5 text-[9px] font-bold uppercase tracking-widest text-slate-400 cursor-not-allowed">Active Component</button>
+            </div>
+
+            <!-- Yolk Tier ($5/mo) -->
+            <div class="console-card group relative border-brand-yellow/40 bg-brand-yellow/5">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-brand-yellow text-slate-950 text-[8px] font-black uppercase tracking-widest rounded-full shadow-neon">Recommended</div>
+              <div class="console-header border-brand-yellow/20">
+                <div class="flex items-center gap-3">
+                  <div class="console-title text-brand-yellow/70">Tier 2</div>
+                </div>
+                <div class="status-line status-green"><span class="status-dot"></span>$5 / MO</div>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-2">Yolk</h3>
+              <p class="text-slate-300 text-xs mb-6">Powered by YOLK Alpha 1.0.0. Quantitative AI insights for traders who want the liquid core of market logic.</p>
+              <ul class="space-y-3 mb-8 text-[10px] text-slate-200 font-mono">
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-yellow rounded-full shadow-glow"></div> <b>AI News Sentiment (YOLK)</b></li>
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-yellow rounded-full"></div> Rise/Decline Predictions</li>
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-yellow rounded-full"></div> Advanced Sector Logic</li>
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-yellow rounded-full"></div> Multi-Market Sync</li>
+              </ul>
+              <button class="w-full py-3 rounded-xl border-2 border-brand-yellow/50 bg-brand-yellow/10 text-[9px] font-bold uppercase tracking-widest text-brand-yellow hover:bg-brand-yellow hover:text-slate-950 transition-all">Extract the Yolk</button>
+            </div>
+
+            <!-- Omelet Tier ($20/mo) -->
+            <div class="console-card group relative border-brand-green/40">
+              <div class="console-header border-brand-green/20">
+                <div class="flex items-center gap-3">
+                  <div class="console-title text-brand-green/70">Tier 3</div>
+                </div>
+                <div class="status-line status-green"><span class="status-dot"></span>$20 / MO</div>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-2">Omelet</h3>
+              <p class="text-slate-400 text-xs mb-6">The ultimate institutional component. A full quantitative suite designed for those who want to fry the competition.</p>
+              <ul class="space-y-3 mb-8 text-[10px] text-slate-300 font-mono">
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Full Quantitative Suite</li>
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> 24/7 Rooster Response</li>
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Multi-Market Portfolio</li>
+                <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> High-Priority Prediction API</li>
+              </ul>
+              <button class="w-full py-3 rounded-xl border-2 border-brand-green/30 bg-brand-green/5 text-[9px] font-bold uppercase tracking-widest text-brand-green hover:bg-brand-green/20 transition-all">Go Omelet</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="blog" class="page-section hidden rounded-[40px] retro-panel p-8 shadow-neon">
+        <div class="flex flex-col gap-6">
+          <div class="top-box rounded-[24px] border-2 border-brand-red/20 bg-brand-red/5 p-6 border-dashed">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="px-2 py-1 bg-brand-red text-[9px] text-white font-bold rounded animate-bounce">LIVE FEED</div>
+              <span class="text-[10px] uppercase tracking-[0.3em] text-brand-red font-bold">Hatchery Chronicles</span>
+            </div>
+            <p class="slow-typist text-sm leading-relaxed text-slate-200" data-text="BREAKING: NEW STOCK OPPORTUNITY DISCOVERED IN SECTOR 7. MARKET VOLATILITY INCREASING. STAY TUNED FOR FRESH SHELL UPDATES."></p>
+          </div>
+          <div class="inline-flex items-center gap-3 rounded-full bg-brand-red/10 px-4 py-2 text-sm font-semibold text-brand-red">Blog</div>
+          <h2 class="text-3xl font-semibold text-white">The Daily Fry: Reports from the Market Pan.</h2>
+          <p class="max-w-3xl text-slate-300">Stay informed with the latest insights from our roosters on the ground. We track every crack in the market so you don't have to.</p>
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div class="console-card"><div class="console-header"><div class="console-title">SIGNAL</div><div class="status-line status-green"><span class="status-dot"></span>LIVE</div></div><h3 class="font-semibold text-white">Daily Cracks</h3><p class="mt-3 text-slate-400">Our quantitative team breaks down market volatility with surgical precision.</p></div>
+            <div class="console-card"><div class="console-header"><div class="console-title">AUDIO</div><div class="status-line status-green"><span class="status-dot"></span>OK</div></div><h3 class="font-semibold text-white">Rooster Reports</h3><p class="mt-3 text-slate-400">High-priority updates from the ground floor of the global hatchery.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="auth" class="page-section hidden rounded-[40px] retro-panel p-8 shadow-neon">
+        <div id="react-auth-root"></div>
+      </section>
+
+      <section id="contact" class="page-section hidden rounded-[40px] retro-panel p-8 shadow-neon">
+        <div class="flex flex-col gap-6">
+          <div class="top-box rounded-[24px] border-2 border-blue-500/20 bg-blue-500/5 p-6 shadow-glow">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="status-line status-blue"><span class="status-dot"></span></div>
+              <span class="text-[10px] uppercase tracking-[0.3em] text-blue-400 font-bold">Uplink Established</span>
+            </div>
+            <p class="slow-typist text-sm leading-relaxed text-slate-200" data-text="TRANSMISSION CHANNEL OPEN. STANDBY FOR DIRECT HATCHERY CORRESPONDENCE. OUR ROOSTERS ARE READY TO RELAY YOUR SIGNAL."></p>
+          </div>
+          <div class="inline-flex items-center gap-3 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/90">Contact</div>
+          <h2 class="text-3xl font-semibold text-white">Establish Uplink: Connect with the Roosters.</h2>
+          <p class="max-w-3xl text-slate-300">Have a query regarding your position? Need to report a shell breach? Our authorized hatchery support team is ready to assist.</p>
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div class="console-card"><div class="console-header"><div class="console-title">NETWORK</div><div class="status-line status-green"><span class="status-dot"></span>OPEN</div></div><h3 class="font-semibold text-white">Official Uplink</h3><p class="mt-3 text-slate-400">Connect directly with authorized hatchery roosters for position support.</p></div>
+            <div class="console-card"><div class="console-header"><div class="console-title">POWER</div><div class="status-line status-red"><span class="status-dot"></span>HIGH</div></div><h3 class="font-semibold text-white">Institutional Spotlight</h3><p class="mt-3 text-slate-400">A bold CTA for those ready to scale their position in the market pan.</p></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="site-footer-bar" class="footer-bar">
+    <div class="footer-bar-inner">
+      <span>© 2026 EggMash500 — quantitative market hatchery</span>
+      <nav class="footer-links inline-flex gap-4">
+        <a href="#" class="footer-link">Privacy</a>
+        <a href="#" class="footer-link">Terms</a>
+        <a href="#" class="footer-link">Support</a>
+      </nav>
+    </div>
+  </div>
+
+  <div id="loading-overlay" class="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-slate-950/98 backdrop-blur-xl" style="opacity:0; pointer-events:none; transition: opacity 0.45s ease;">
+    <div class="absolute top-12 left-1/2 -translate-x-1/2 transition-all duration-700 ease-out" id="loader-logo-container">
+      <div class="relative group">
+        <div class="absolute -inset-6 bg-brand-yellow/5 rounded-full blur-3xl opacity-60"></div>
+        <div class="relative flex flex-col items-center">
+          <div class="relative h-28 w-28 overflow-hidden rounded-[36px] border-2 border-white/10 bg-transparent p-3 shadow-2xl backdrop-blur-xl border border-white/5">
+            <img src="logo.png" alt="EggMash500 logo" class="h-full w-full object-contain" />
+            <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand-yellow/60 to-transparent animate-scan"></div>
+            <div class="absolute top-2 left-2 h-1.5 w-1.5 border-t border-l border-white/30"></div>
+            <div class="absolute top-2 right-2 h-1.5 w-1.5 border-t border-r border-white/30"></div>
+            <div class="absolute bottom-2 left-2 h-1.5 w-1.5 border-b border-l border-white/30"></div>
+            <div class="absolute bottom-2 right-2 h-1.5 w-1.5 border-b border-r border-white/30"></div>
+          </div>
+          <div class="mt-5 flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-lg shadow-inner">
+            <div class="h-1.5 w-1.5 rounded-full bg-brand-yellow animate-pulse"></div>
+            <span class="text-[9px] uppercase tracking-[0.4em] text-slate-300 font-bold">Secure Boot Protocol</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="loader-content w-full max-w-lg px-8 text-center transition-transform duration-100 ease-out" id="loader-tilt-container">
+      <div class="relative mx-auto mb-10 h-56 w-56 overflow-hidden rounded-full bg-transparent border-4 border-brand-yellow/10">
+        <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_m6cuL6.json" background="transparent" speed="2" loop autoplay class="absolute inset-0 h-full w-full opacity-90 scale-110"></lottie-player>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(5,8,22,0.4)_100%)]"></div>
+      </div>
+      <h2 id="loader-status" class="pixel-title text-2xl font-semibold tracking-[0.2em] text-brand-yellow">BOOTING...</h2>
+      <div class="mx-auto mt-8 h-6 w-full max-w-xs border-2 border-white/10 bg-transparent p-1">
+        <div id="loader-progress" class="h-full w-0 bg-brand-yellow shadow-[0_0_15px_rgba(250,204,21,0.4)] transition-all duration-300 ease-out"></div>
+      </div>
+      <div class="mt-6 h-[20px] overflow-hidden text-[10px] uppercase tracking-[0.3em] text-slate-500">
+        <div id="loader-log" class="flex flex-col transition-transform duration-300">
+          <div class="loader-log-entry h-[20px] flex items-center justify-center">Searching for eggs...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  /* ═══════════════════════════════════════════════
+     8-BIT EGG SMASH SOUND
+  ═══════════════════════════════════════════════ */
+  function playEggSmash() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      function beep(freq, startTime, duration, type, gainVal, endFreq) {
+        const osc = ctx.createOscillator(); const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = type || 'square';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+        if (endFreq !== undefined) osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + startTime + duration);
+        gain.gain.setValueAtTime(gainVal || 0.15, ctx.currentTime + startTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startTime + duration);
+        osc.start(ctx.currentTime + startTime); osc.stop(ctx.currentTime + startTime + duration);
+      }
+      function noise(startTime, duration, gainVal, freq) {
+        const bufSize = ctx.sampleRate * duration;
+        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+        const src = ctx.createBufferSource(); src.buffer = buf;
+        const filter = ctx.createBiquadFilter(); filter.type = 'highpass'; filter.frequency.value = freq || 2000;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(gainVal || 0.25, ctx.currentTime + startTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startTime + duration);
+        src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        src.start(ctx.currentTime + startTime); src.stop(ctx.currentTime + startTime + duration);
+      }
+      noise(0.0, 0.12, 0.4, 3000); noise(0.02, 0.18, 0.25, 1200);
+      beep(800, 0.0, 0.08, 'square', 0.2, 200);
+      beep(140, 0.1, 0.15, 'sawtooth', 0.15, 40);
+    } catch(e) {}
+  }
+  window.addEventListener('load', () => setTimeout(playEggSmash, 500));
+
+  /* ═══════════════════════════════════════════════
+     DAY / NIGHT ORBITAL TRANSITION
+  ═══════════════════════════════════════════════ */
+  let isDayMode = false;
+
+  function triggerDayNightTransition() {
+    if (isDayMode) return;
+    isDayMode = true;
+
+    const moon   = document.getElementById('moon');
+    const sun    = document.getElementById('sun');
+
+    moon.style.transition = [
+      'transform 4.2s cubic-bezier(0.6, 0, 0.4, 1)',
+      'opacity   3.2s cubic-bezier(0.4, 0, 1, 1)'
+    ].join(', ');
+    moon.style.animation = 'none';
+    moon.style.transform = 'translate(75vw, 92vh) rotate(225deg) scale(0.45)';
+    moon.style.opacity   = '0';
+
+    setTimeout(() => {
+      document.body.classList.add('day-mode');
+      window.dispatchEvent(new CustomEvent('eggmash-theme-changed', { detail: { isDayMode: true } }));
+      document.querySelectorAll('.slow-typist').forEach(el => {
+        if (el.dataset.text === "WELCOME TO EGGMASH500. YOLK ALPHA 1.0.0 INITIALIZED. DEPLOYING HIGH-PROBABILITY DATA SHELLS. STANDBY FOR FINANCIAL OVER EASY...") {
+          el.dataset.text = "GOOD MORNING FROM THE HATCHERY. SOLAR HARVEST: OPTIMAL. MARKET VISIBILITY: 100%. READY FOR FRESH TRADES.";
+          el.dataset.isTyping = "false";
+          runHeaderTypewriter();
+        }
+      });
+    }, 200);
+
+    sun.style.transition = 'none';
+    sun.style.transform  = 'translate(38vw, 115vh) rotate(-170deg) scale(0.35)';
+    sun.style.opacity    = '0';
+    sun.getBoundingClientRect();
+
+    setTimeout(() => {
+      sun.style.transition = [
+        'transform 4.8s cubic-bezier(0.18, 1.3, 0.4, 1)',
+        'opacity   3.5s cubic-bezier(0.4, 0, 0.2, 1)'
+      ].join(', ');
+      requestAnimationFrame(() => {
+        sun.style.transform = 'translate(0px, 0px) rotate(0deg) scale(1)';
+        sun.style.opacity   = '1';
+      });
+    }, 650);
+
+    setTimeout(() => {
+      sun.style.animation = 'sun-glow 6s ease-in-out infinite';
+      const rays = document.getElementById('sun-rays');
+      if (rays) {
+        rays.style.transformOrigin = '10.5px 10.5px';
+        rays.style.animation = 'sun-rays-spin 14s linear infinite';
+      }
+      sun.style.transition = 'transform 1.2s cubic-bezier(0.4,0,0.2,1), opacity 1.2s ease';
+    }, 4800);
+  }
+
+  function triggerSunToMoonTransition() {
+    if (!isDayMode) return;
+    isDayMode = false;
+
+    const moon = document.getElementById('moon');
+    const sun  = document.getElementById('sun');
+    if (!moon || !sun) return;
+
+    sun.style.transition = [
+      'transform 4.2s cubic-bezier(0.6, 0, 0.4, 1)',
+      'opacity   3.2s cubic-bezier(0.4, 0, 1, 1)'
+    ].join(', ');
+    sun.style.animation = 'none';
+    sun.style.transform = 'translate(75vw, 92vh) rotate(225deg) scale(0.45)';
+    sun.style.opacity   = '0';
+
+    setTimeout(() => {
+      document.body.classList.remove('day-mode');
+      window.dispatchEvent(new CustomEvent('eggmash-theme-changed', { detail: { isDayMode: false } }));
+      document.querySelectorAll('.slow-typist').forEach(el => {
+        if (el.dataset.text === "GOOD MORNING FROM THE HATCHERY. SOLAR HARVEST: OPTIMAL. MARKET VISIBILITY: 100%. READY FOR FRESH TRADES.") {
+          el.dataset.text = "WELCOME TO EGGMASH500. YOLK ALPHA 1.0.0 INITIALIZED. DEPLOYING HIGH-PROBABILITY DATA SHELLS. STANDBY FOR FINANCIAL OVER EASY...";
+          el.dataset.isTyping = "false";
+          runHeaderTypewriter();
+        }
+      });
+    }, 200);
+
+    moon.style.transition = 'none';
+    moon.style.transform  = 'translate(38vw, 115vh) rotate(-170deg) scale(0.35)';
+    moon.style.opacity    = '0';
+    moon.getBoundingClientRect();
+
+    setTimeout(() => {
+      moon.style.transition = [
+        'transform 4.8s cubic-bezier(0.18, 1.3, 0.4, 1)',
+        'opacity   3.5s cubic-bezier(0.4, 0, 0.2, 1)'
+      ].join(', ');
+      requestAnimationFrame(() => {
+        moon.style.transform = 'translate(0px, 0px) rotate(0deg) scale(1)';
+        moon.style.opacity   = '1';
+      });
+    }, 650);
+
+    setTimeout(() => {
+      moon.style.animation = 'moon-glow 6s ease-in-out infinite';
+      const pupils = document.querySelectorAll('#moon-eyes rect');
+      if (pupils.length) pupils.forEach(p => p.style.animation = 'none');
+      moon.style.transition = 'transform 1.2s cubic-bezier(0.4,0,0.2,1), opacity 1.2s ease';
+    }, 4800);
+  }
+
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    @keyframes sun-rays-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    body.day-mode #game-bg {
+      background: linear-gradient(180deg, #0369a1 0%, #0ea5e9 40%, #38bdf8 75%, #bae6fd 100%) !important;
+    }
+    body.day-mode .sky-stars { opacity: 0 !important; }
+    body.day-mode .pixel-star { animation-play-state: paused !important; }
+    body.day-mode { background-color: #f0f9ff; color: #0c1a2e; text-shadow: none; }
+    body.day-mode header { background: rgba(224, 242, 254, 0.88) !important; border-bottom-color: rgba(14, 165, 233, 0.3) !important; }
+    body.day-mode header h1 { color: #0c4a6e !important; }
+    body.day-mode header p  { color: #0369a1 !important; }
+    body.day-mode .major-btn { background: rgba(224, 242, 254, 0.7) !important; color: #0c4a6e !important; }
+    body.day-mode button[data-page="home"].major-btn { border-color: rgba(250, 204, 21, 0.5) !important; }
+    body.day-mode button[data-page="services"].major-btn { border-color: rgba(34, 197, 94, 0.5) !important; }
+    body.day-mode button[data-page="blog"].major-btn { border-color: rgba(239, 68, 68, 0.5) !important; }
+    body.day-mode button[data-page="contact"].major-btn { border-color: rgba(14, 165, 233, 0.35) !important; }
+    body.day-mode .major-btn:hover { background: rgba(186, 230, 253, 0.9) !important; }
+    body.day-mode #header-profile { background: rgba(186, 230, 253, 0.5) !important; box-shadow: 0 0 0 1px rgba(14,165,233,0.2) !important; }
+    body.day-mode .retro-panel { background: rgba(9, 14, 34, 0.92) !important; box-shadow: 0 0 20px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important; }
+    body.day-mode #home { border-color: rgba(250, 204, 21, 0.4) !important; }
+    body.day-mode #services { border-color: rgba(34, 197, 94, 0.4) !important; }
+    body.day-mode #blog { border-color: rgba(239, 68, 68, 0.4) !important; }
+    body.day-mode #auth { border-color: rgba(250, 204, 21, 0.4) !important; }
+    body.day-mode #contact { border-color: rgba(255, 255, 255, 0.3) !important; }
+    body.day-mode .retro-panel::before { background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) !important; opacity: 0.3 !important; }
+    body.day-mode .console-card { background: rgba(12, 18, 52, 0.88) !important; border-color: rgba(14, 165, 233, 0.35) !important; }
+    body.day-mode .console-card:hover { background: rgba(17, 26, 68, 0.96) !important; }
+    body.day-mode .console-card h3 { color: #e2e8f0 !important; }
+    body.day-mode .console-card p  { color: #94a3b8 !important; }
+    body.day-mode .console-title   { color: rgba(148,163,184,0.85) !important; }
+    body.day-mode .top-box { background: rgba(255,255,255,0.04) !important; border-color: rgba(255,255,255,0.12) !important; }
+    body.day-mode .top-box .slow-typist { color: #e2e8f0 !important; }
+    body.day-mode .page-section h2, body.day-mode .page-section h3 { color: #f1f5f9 !important; }
+    body.day-mode .page-section p  { color: #94a3b8 !important; }
+    body.day-mode .page-section .text-slate-300 { color: #cbd5e1 !important; }
+    body.day-mode .page-section .text-slate-400 { color: #94a3b8 !important; }
+    body.day-mode header h1 { color: #0c4a6e !important; }
+    body.day-mode header p  { color: #0369a1 !important; }
+    body.day-mode #loading-overlay { background: rgba(224, 242, 254, 0.98) !important; transition: opacity 0.45s ease !important; }
+    body.day-mode #loader-status { color: #0369a1 !important; text-shadow: 0 0 10px rgba(14,165,233,0.4) !important; }
+    body.day-mode .footer-bar { background: rgba(224, 242, 254, 0.9) !important; border-top-color: rgba(14, 165, 233, 0.25) !important; color: #0369a1 !important; }
+    body.day-mode .footer-link { color: #0284c7 !important; }
+    body.day-mode .footer-link:hover { color: #0c4a6e !important; }
+    body.day-mode #scanlines { opacity: 0.06 !important; }
+    body.day-mode .startup-grid { opacity: 0.06 !important; }
+    body.day-mode .pixel-cursor { filter: drop-shadow(0 0 10px rgba(14,165,233,0.5)) !important; }
+    body.day-mode .status-line { color: #0284c7 !important; }
+    body.day-mode #react-auth-root input { background: rgba(186,230,253,0.4) !important; border-color: rgba(14,165,233,0.35) !important; color: #0c4a6e !important; }
+    body.day-mode #react-auth-root input::placeholder { color: #7dd3fc !important; }
+    body.day-mode .pixel-tree svg rect[fill="#064e3b"] { fill: #14532d !important; }
+    body.day-mode .pixel-tree svg rect[fill="#065f46"] { fill: #166534 !important; }
+    body.day-mode .pixel-tree svg rect[fill="#059669"] { fill: #16a34a !important; }
+    body.day-mode .pixel-tree svg rect[fill="#10b981"] { fill: #22c55e !important; }
+    body.day-mode .cloud { opacity: 0.7 !important; }
+  `;
+  document.head.appendChild(styleEl);
+
+  window.addEventListener('load', () => {
+    const storedUser = localStorage.getItem('eggmash_current_user');
+    if (storedUser) {
+      const staticContent = document.getElementById('home-static-content');
+      const marketRoot = document.getElementById('react-market-root');
+      if (staticContent && marketRoot) {
+        staticContent.classList.add('hidden', 'opacity-0', '-translate-y-12', 'pointer-events-none');
+        marketRoot.classList.remove('absolute', 'opacity-0', 'pointer-events-none', 'translate-y-12');
+        marketRoot.classList.add('relative', 'opacity-100', 'translate-y-0');
+      }
+      if (!isDayMode && typeof triggerDayNightTransition === 'function') {
+        setTimeout(triggerDayNightTransition, 120);
+      }
+    }
+  });
+
+  /* ═══════════════════════════════════════════════
+     PAGE / NAV LOGIC
+  ═══════════════════════════════════════════════ */
+  const pages = ['home', 'services', 'blog', 'contact', 'auth'];
+  const sectionMap = {};
+  const overlay = document.getElementById('loading-overlay');
+  const loaderProgress = document.getElementById('loader-progress');
+  const loaderStatus   = document.getElementById('loader-status');
+  const loaderLog      = document.getElementById('loader-log');
+  const loaderTilt     = document.getElementById('loader-tilt-container');
+  const eggDropdown    = document.getElementById('egg-dropdown');
+  const eggLoginBtn    = document.getElementById('egg-login-btn');
+  const eggSignupBtn   = document.getElementById('egg-signup-btn');
+  const eggAccountBtn  = document.getElementById('egg-account-btn');
+  const eggSignoutBtn  = document.getElementById('egg-signout-btn');
+  let currentLoaderMode = 'default';
+
+  const statusMessages = ["HEATING THE PAN...", "CALIBRATING YOLK RATIOS...", "POLISHING THE SHELLS...", "WHIPPING THE DATA...", "CALCULATING CRACKS..."];
+  const logEntries     = ["Scanning for market fractures...", "Inspecting shell integrity...", "Boiling data buffers...", "Aligning institutional whites...", "Seasoning prediction models...", "Waking up the roosters..."];
+
+  function updateEggDropdown() {
+    const isLoggedIn = !!localStorage.getItem('eggmash_current_user');
+    if (!eggLoginBtn || !eggSignupBtn || !eggAccountBtn || !eggSignoutBtn) return;
+    if (isLoggedIn) {
+      eggLoginBtn.style.display = 'none';
+      eggSignupBtn.style.display = 'none';
+      eggAccountBtn.style.display = 'block';
+      eggSignoutBtn.style.display = 'block';
+    } else {
+      eggLoginBtn.style.display = 'block';
+      eggSignupBtn.style.display = 'block';
+      eggAccountBtn.style.display = 'none';
+      eggSignoutBtn.style.display = 'none';
+    }
+  }
+
+  function closeEggDropdown() {
+    if (!eggDropdown) return;
+    eggDropdown.classList.remove('show');
+  }
+
+  function toggleEggDropdown() {
+    if (!eggDropdown) return;
+    const isVisible = eggDropdown.classList.contains('show');
+    if (isVisible) return closeEggDropdown();
+    updateEggDropdown();
+    eggDropdown.classList.add('show');
+  }
+
+  function setLoaderVariant(mode) {
+    currentLoaderMode = mode || 'default';
+    if (mode === 'login') {
+      loaderStatus.textContent = 'EGG VALIDATION IN PROGRESS...';
+      loaderLog.innerHTML = `
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Verifying yolk cryptography...</div>
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Aligning shell fragments...</div>
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Deploying hatchery access keys...</div>
+      `;
+    } else if (mode === 'signout') {
+      loaderStatus.textContent = 'UNLINKING SESSION...';
+      loaderLog.innerHTML = `
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Closing solar gateway...</div>
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Securing eggshell perimeter...</div>
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Purging session feathers...</div>
+      `;
+    } else if (mode === 'auth') {
+      loaderStatus.textContent = 'ACCESSING MARKET...';
+      loaderLog.innerHTML = `<div class="loader-log-entry h-[20px] flex items-center justify-center">Checking secure credentials...</div>`;
+    } else {
+      loaderStatus.textContent = 'BOOTING...';
+      loaderLog.innerHTML = `<div class="loader-log-entry h-[20px] flex items-center justify-center">${isDayMode ? 'Scanning for sunflowers...' : 'Searching for eggs...'}</div>`;
+    }
+  }
+  const statusMessagesDay = ["SOLAR DATA OVER EASY...", "SENSING MARKET TEMPERATURE...", "WHIPPING FRESH LOGIC...", "SUNRISE ANALYTICS ONLINE...", "VIBRATING FINANCIAL HORIZON..."];
+  const logEntriesDay     = ["Clearing early trade mist...", "Growing portfolio instances...", "Charging quantitative batteries...", "Waking up the roosters...", "Heating the frying pan...", "Saying hello to the charts..."];
+
+  let isLoading = false;
+
+  function openLoader(page, mode = 'default') {
+    if (isLoading) return;
+    isLoading = true;
+    loaderProgress.style.width = '0%';
+    setLoaderVariant(mode);
+    // Show overlay via inline style (no class conflict)
+    overlay.style.opacity = '1';
+    overlay.style.pointerEvents = 'auto';
+
+    const activeStatus = isDayMode ? statusMessagesDay : statusMessages;
+    const activeLogs   = isDayMode ? logEntriesDay : logEntries;
+
+    let progress = 0, logIndex = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 8;
+      if (progress > 100) progress = 100;
+      loaderProgress.style.width = `${progress}%`;
+      if (progress > logIndex * 20 && logIndex < activeLogs.length) {
+        const entry = document.createElement('div');
+        entry.className = 'loader-log-entry h-[20px] flex items-center justify-center';
+        entry.textContent = activeLogs[logIndex];
+        loaderLog.appendChild(entry);
+        loaderLog.style.transform = `translateY(-${logIndex * 20}px)`;
+        logIndex++;
+      }
+      if (progress > 25 && progress < 30) loaderStatus.textContent = activeStatus[0];
+      if (progress > 50 && progress < 55) loaderStatus.textContent = activeStatus[1];
+      if (progress > 75 && progress < 80) loaderStatus.textContent = activeStatus[2];
+      if (progress > 95) loaderStatus.textContent = activeStatus[3];
+      if (progress >= 100) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setPage(page);
+          updateScrollUI();
+          overlay.style.opacity = '0';
+          overlay.style.pointerEvents = 'none';
+          
+          if (page === 'home' && window.isLoginTransition) {
+            window.isLoginTransition = false;
+            setTimeout(() => {
+              if (typeof triggerDayNightTransition === 'function') triggerDayNightTransition();
+              const staticContent = document.getElementById('home-static-content');
+              const marketRoot = document.getElementById('react-market-root');
+              const homeSection = document.getElementById('home');
+              if (staticContent && marketRoot) {
+                if (homeSection) homeSection.style.minHeight = '';
+                staticContent.classList.add('opacity-0', '-translate-y-12', 'pointer-events-none');
+                setTimeout(() => {
+                  staticContent.classList.add('hidden');
+                  marketRoot.classList.remove('absolute', 'opacity-0', 'pointer-events-none', 'translate-y-12');
+                  marketRoot.classList.add('relative', 'opacity-100', 'translate-y-0');
+                }, 500);
+              }
+            }, 500);
+          }
+
+          if (page === 'home' && window.isSignOutTransition) {
+            window.isSignOutTransition = false;
+            setTimeout(() => {
+              if (typeof triggerSunToMoonTransition === 'function') triggerSunToMoonTransition();
+              const staticContent = document.getElementById('home-static-content');
+              const marketRoot = document.getElementById('react-market-root');
+              const homeSection = document.getElementById('home');
+              if (staticContent && marketRoot) {
+                if (homeSection) homeSection.style.minHeight = '';
+                staticContent.classList.remove('hidden');
+                staticContent.classList.remove('opacity-0', '-translate-y-12', 'pointer-events-none');
+                marketRoot.classList.add('absolute', 'opacity-0', 'pointer-events-none', 'translate-y-12');
+                marketRoot.classList.remove('relative', 'opacity-100', 'translate-y-0');
+              }
+            }, 500);
+          }
+
+          setTimeout(() => { isLoading = false; setupFadeReveal(); }, 500);
+        }, 400);
+      }
+    }, 120);
+  }
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isLoading || !loaderTilt) return;
+    const x = (e.clientX / window.innerWidth - 0.5) * 15;
+    const y = (e.clientY / window.innerHeight - 0.5) * 15;
+    loaderTilt.style.transform = `perspective(1000px) rotateX(${-y}deg) rotateY(${x}deg)`;
+  });
+
+  const coinLayer    = document.getElementById('coin-layer');
+  const moonEl       = document.getElementById('moon');
+  const sunEl        = document.getElementById('sun');
+  const spaceship    = document.getElementById('spaceship');
+  const shootingStarLayer = document.getElementById('shooting-star-layer');
+  const gameBg       = document.getElementById('game-bg');
+  const pixelCursor  = document.getElementById('pixel-cursor');
+  const pixelCursorImg = document.getElementById('pixel-cursor-img');
+
+  const normalCursorSvg  = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="3" y="2" width="10" height="12" rx="5" ry="6" fill="#f9d849"/><rect x="4" y="3" width="8" height="1" fill="#fef3c7"/><rect x="3" y="4" width="10" height="1" fill="#fedf7c"/><rect x="3" y="5" width="10" height="4" fill="#f9d849"/><rect x="4" y="9" width="8" height="1" fill="#fde68a"/><rect x="5" y="10" width="6" height="1" fill="#fcd34d"/><rect x="6" y="11" width="4" height="1" fill="#fbbf24"/><rect x="6" y="12" width="4" height="1" fill="#f59e0b"/></svg>`;
+  const crackedCursorSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="3" y="2" width="10" height="12" rx="5" ry="6" fill="#f9d849"/><rect x="4" y="3" width="8" height="1" fill="#fef3c7"/><rect x="3" y="4" width="10" height="1" fill="#fedf7c"/><rect x="3" y="5" width="10" height="4" fill="#f9d849"/><rect x="4" y="9" width="8" height="1" fill="#fde68a"/><rect x="5" y="10" width="6" height="1" fill="#fcd34d"/><rect x="6" y="11" width="4" height="1" fill="#fbbf24"/><rect x="6" y="12" width="4" height="1" fill="#f59e0b"/><path d="M8 4 L7 6 L8 8 L7 10" stroke="#111827" stroke-width="1" fill="none"/></svg>`;
+  const normalCursorSrc  = `data:image/svg+xml;utf8,${encodeURIComponent(normalCursorSvg)}`;
+  const crackedCursorSrc = `data:image/svg+xml;utf8,${encodeURIComponent(crackedCursorSvg)}`;
+  if (pixelCursorImg) pixelCursorImg.src = normalCursorSrc;
+
+  let cursorReady = true;
+  let lastScrollY = window.scrollY;
+
+  function setupFadeReveal() {
+    const selectors = ['.page-section','.page-section h2','.page-section h3','.page-section p','.page-section .inline-flex','.console-card','.console-card h3','.retro-panel p','.major-btn'];
+    const elements = Array.from(document.querySelectorAll(selectors.join(','))).filter(el => !el.classList.contains('fade-reveal'));
+    elements.forEach((el, index) => {
+      el.classList.add('fade-reveal');
+      el.style.setProperty('--fade-delay', `${Math.min(200, index * 20)}ms`);
+    });
+    const observer = new IntersectionObserver((entries) => {
+      const scrollY = window.scrollY;
+      const scrollingDown = scrollY > lastScrollY;
+      entries.forEach(entry => {
+        const rect = entry.boundingClientRect;
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          entry.target.style.transform = 'translateY(0)';
+          entry.target.style.opacity = '1';
+        } else {
+          entry.target.classList.remove('visible');
+          if (scrollingDown) {
+            entry.target.style.transform = rect.top < 0 ? 'translateY(-20px)' : 'translateY(20px)';
+          } else {
+            entry.target.style.transform = rect.top > window.innerHeight ? 'translateY(20px)' : 'translateY(-20px)';
+          }
+          entry.target.style.opacity = '0';
+        }
+      });
+      lastScrollY = scrollY;
+    }, { threshold: 0.1 });
+    elements.forEach(el => observer.observe(el));
+  }
+
+  function runHeaderTypewriter() {
+    document.querySelectorAll('.slow-typist').forEach(el => {
+      if (el.offsetParent !== null && el.dataset.isTyping !== 'true') {
+        const text = el.dataset.text || el.textContent.trim();
+        el.textContent = '';
+        el.dataset.isTyping = 'true';
+        let index = 0;
+        const step = () => {
+          if (index <= text.length) { el.textContent = text.slice(0, index); index++; setTimeout(step, 30 + Math.round(Math.random() * 20)); }
+          else { el.classList.add('finished'); el.dataset.isTyping = 'false'; }
+        };
+        step();
+      }
+    });
+  }
+
+  function setPage(page) {
+    pages.forEach(pageId => {
+      const section = sectionMap[pageId];
+      if (!section) return;
+      section.classList.toggle('hidden', pageId !== page);
+    });
+    document.querySelectorAll('.major-btn').forEach(button => {
+      const isActive = button.dataset.page === page;
+      button.classList.toggle('border-brand-yellow', isActive);
+      button.classList.toggle('bg-brand-yellow/10', isActive);
+      button.classList.toggle('text-white', isActive);
+    });
+    document.querySelectorAll(`#${page} .slow-typist`).forEach(el => { el.dataset.isTyping = 'false'; });
+    setTimeout(runHeaderTypewriter, 150);
+  }
+
+  pages.forEach(pageId => { sectionMap[pageId] = document.getElementById(pageId); });
+
+  document.querySelectorAll('[data-page]').forEach(button => {
+    button.addEventListener('click', () => { const page = button.dataset.page; if (pages.includes(page)) openLoader(page); });
+  });
+
+  const eggToggleButton = document.getElementById('header-profile');
+  if (eggToggleButton) {
+    eggToggleButton.addEventListener('click', event => {
+      event.preventDefault(); event.stopPropagation();
+      toggleEggDropdown();
+    });
+  }
+
+  document.addEventListener('click', event => {
+    if (!eggToggleButton || !eggDropdown) return;
+    if (!eggToggleButton.contains(event.target) && !eggDropdown.contains(event.target)) closeEggDropdown();
+  });
+
+  if (eggLoginBtn) eggLoginBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openLoader('auth', 'auth');
+    setTimeout(closeEggDropdown, 10);
+  });
+  if (eggSignupBtn) eggSignupBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openLoader('auth', 'auth');
+    setTimeout(closeEggDropdown, 10);
+  });
+  if (eggAccountBtn) eggAccountBtn.addEventListener('click', () => {
+    closeEggDropdown();
+  });
+  if (eggSignoutBtn) eggSignoutBtn.addEventListener('click', () => {
+    closeEggDropdown();
+    localStorage.removeItem('eggmash_current_user');
+    window.dispatchEvent(new CustomEvent('eggmash-user-changed', { detail: { email: 'guest' } }));
+    window.isSignOutTransition = true;
+    window.isLoginTransition = false;
+    openLoader('home', 'signout');
+  });
+
+  /* ═══════════════════════════════════════════════
+     REACT COMPONENTS
+  ═══════════════════════════════════════════════ */
+  const { useState, useEffect, useMemo, useRef } = React;
+  const e = React.createElement;
+
+  // Finance Term Helper (Hover Definitions)
+  const FinanceTerm = ({term, definition, isDay}) => {
+    const [show, setShow] = useState(false);
+    return e('span', { 
+      className: 'relative inline-block cursor-help group/term',
+      onMouseEnter: () => setShow(true),
+      onMouseLeave: () => setShow(false)
+    },
+      e('span', { className: `font-black border-b-2 border-brand-yellow/30 pb-0.5 transition-colors group-hover/term:border-brand-yellow ${isDay ? 'text-slate-900' : 'text-white'}` }, term),
+      show && e('div', { 
+        className: 'absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 rounded-xl bg-slate-950 border border-brand-yellow/30 shadow-[0_0_30px_rgba(250,204,21,0.25)] z-[500] backdrop-blur-3xl animate-slide-up' 
+      },
+        e('div', { className: 'flex items-center gap-2 mb-2 pb-2 border-b border-white/5' },
+          e('div', { className: 'w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse' }),
+          e('span', { className: 'text-[9px] font-black text-white uppercase tracking-widest' }, 'Glossary Definition')
+        ),
+        e('p', { className: 'text-[10px] leading-relaxed text-slate-300 font-bold font-mono' }, definition)
+      )
+    );
+  };
+
+  // Sentiment Row Sub-component (Overhauled for terminal fidelity)
+  const SentimentRow = ({item, index, isAnalyzing, hasRevealed, isDay}) => {
+    const [displayScore, setDisplayScore] = useState(0); 
+    const [showRationale, setShowRationale] = useState(false);
+    const prevAnalyzing = useRef(isAnalyzing);
+    
+    useEffect(() => {
+      if (!hasRevealed) return;
+      if ((prevAnalyzing.current === true && isAnalyzing === false) || (displayScore === 0 && !isAnalyzing)) {
+        // Coordinated entry delay based on index
+        const entryTimer = setTimeout(() => {
+          const scoreTimer = setTimeout(() => setDisplayScore(item.score), 100);
+          return () => clearTimeout(scoreTimer);
+        }, index * 80); 
+        return () => clearTimeout(entryTimer);
+      }
+      prevAnalyzing.current = isAnalyzing;
+    }, [item.score, isAnalyzing, hasRevealed, index]);
+
+    const pct = (displayScore / 10) * 100;
+    const barColor = item.score > 7 ? '#22c55e' : item.score > 4 ? '#facc15' : '#ef4444';
+
+    return e('div', { 
+      className: `flex flex-col gap-2 mb-7 group relative transition-all duration-700 ${!hasRevealed ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`,
+      style: { transitionDelay: `${index * 50}ms` }
+    },
+      e('div', { className: 'flex justify-between items-end px-0.5' },
+        e('div', { className: 'flex items-center gap-3' },
+          e('a', { 
+            href: item.link, target: '_blank', 
+            className: `px-2.5 py-0.5 rounded border ${isDay ? 'bg-slate-100 border-slate-300 text-slate-900' : 'bg-white/5 border-white/10 text-slate-300'} text-[9px] font-black uppercase tracking-widest transition-all hover:border-brand-yellow hover:text-brand-yellow` 
+          }, item.source),
+          e('div', { 
+            className: 'relative flex items-center',
+            onMouseEnter: () => setShowRationale(true),
+            onMouseLeave: () => setShowRationale(false)
+          },
+            e('div', { className: `cursor-help ${isDay ? 'text-slate-400' : 'text-slate-600'} hover:text-brand-yellow transition-colors` },
+              e('svg', { width: '12', height: '12', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '3', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                e('circle', { cx: '12', cy: '12', r: '10' }),
+                e('path', { d: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3' }),
+                e('line', { x1: '12', y1: '17', x2: '12.01', y2: '17' })
+              )
+            ),
+            showRationale && e('div', { 
+              className: 'absolute bottom-full left-0 mb-3 w-72 p-4 rounded-xl bg-slate-950 border border-brand-yellow/30 shadow-[0_0_30px_rgba(250,204,21,0.15)] z-[400] backdrop-blur-3xl animate-slide-up' 
+            },
+              e('div', { className: 'flex items-center gap-2 mb-2 pb-2 border-b border-white/5' },
+                e('div', { className: 'w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse' }),
+                e('span', { className: 'text-[9px] font-black text-white uppercase tracking-widest' }, 'Contextual Intelligence')
+              ),
+              e('p', { className: 'text-[10px] leading-relaxed text-slate-300 font-bold font-mono' }, item.rationale)
+            )
+          )
+        ),
+        e('div', { className: 'flex items-baseline gap-1.5' },
+          e('span', { className: `text-xl font-black italic font-mono transition-all duration-1000 ${displayScore === 0 ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`, style: { color: barColor } }, displayScore.toFixed(2)),
+          e('span', { className: 'text-[8px] font-black text-slate-600' }, '/ 10.00')
+        )
+      ),
+      // Progress track
+      e('div', { className: `h-1.5 w-full ${isDay ? 'bg-slate-200' : 'bg-white/5'} rounded-none overflow-hidden relative border-l-2`, style: { borderColor: barColor } },
+        e('div', { 
+          className: 'h-full transition-all duration-[1200ms] cubic-bezier(0.19, 1, 0.22, 1)',
+          style: { 
+            width: `${pct}%`, 
+            background: `linear-gradient(90deg, ${barColor}44 0%, ${barColor} 100%)`,
+            boxShadow: `0 0 10px ${barColor}44`
+          }
+        }),
+        isAnalyzing && e('div', { className: 'absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[scan_2s_linear_infinite]' })
+      )
+    );
+  };
+
+  /* ─── StockMarketUI FINAL ────────────────────────────────────── */
+  const StockMarketUI = () => {
+    const [ticker,       setTicker]      = useState('AAPL');
+    const [companyName,  setCompanyName] = useState('Apple Inc.');
+    const [logoSrc,      setLogoSrc]     = useState('');
+    const [logoFallback, setLogoFallback]= useState(0); // 0=clearbit,1=google,2=initials
+    const [logoDomain,   setLogoDomain]  = useState('apple.com');
+    const [greeting,     setGreeting]    = useState('');
+    const [greetDone,    setGreetDone]   = useState(false);
+    const [search,       setSearch]      = useState('');
+    const [suggestions,  setSuggestions] = useState([]);
+    const [showDrop,     setShowDrop]    = useState(false);
+    const [dropVisible,  setDropVisible] = useState(false);
+    const [dropLoading,  setDropLoading] = useState(false);
+    const [userEmail, setUserEmail]      = useState(localStorage.getItem('eggmash_current_user') || 'guest');
+    const [userPlan, setUserPlan]        = useState(localStorage.getItem('eggmash_current_plan') || 'Shell');
+    const [isDay, setIsDay]              = useState(document.body.classList.contains('day-mode'));
+    const [hasRevealed, setHasRevealed]  = useState(false);
+    const searchRef  = useRef(null);
+    const sentimentRef = useRef(null);
+    const dropTimer  = useRef(null);
+    const dropExitTimer = useRef(null);
+    const chartRef   = useRef(null);
+    const rangeRef   = useRef('1M');
+    const fetchingRef= useRef(false); // prevents duplicate fetches
+
+    const [data, setData] = useState({
+      name: 'Apple Inc.',
+      price: 189.30, change: 1.84, changePercent: 0.98,
+      cap: '2.91T', vol: '48.2M', avgVol: '50.1M', pe: '31.2',
+      open: 187.50, high: 190.10, low: 186.80,
+      previousClose: 187.50, bid: 189.20, ask: 189.40,
+      fiftyTwoWeekLow: 124.17, fiftyTwoWeekHigh: 198.23,
+      beta: 1.23, dividendYield: 0.0052,
+      history: Array.from({length: 90}, (_, i) => {
+        const p = 185 + Math.sin(i/14)*4 + Math.sin(i/5)*1.2 + i*0.04 + Math.random()*0.8;
+        return {time: i, price: p, high: p+0.4, low: p-0.4, open: p-0.1};
+      })
+    });
+    const [hoverPt,    setHoverPt]    = useState(null);
+    const [isLoading,  setIsLoading]  = useState(false);
+    const [activeRange,setActiveRange]= useState('1M');
+
+    // ── THEME & USER: typewriter, runs once on load and again when user changes ────────
+    useEffect(() => {
+      const onUserChange = (event) => {
+        const email = (event.detail && event.detail.email) || localStorage.getItem('eggmash_current_user') || 'guest';
+        const plan = (event.detail && event.detail.plan) || localStorage.getItem('eggmash_current_plan') || 'Shell';
+        setUserEmail(email || 'guest');
+        setUserPlan(plan || 'Shell');
+      };
+      const onThemeChange = (event) => {
+        setIsDay(event.detail.isDayMode);
+      };
+      window.addEventListener('storage', onUserChange);
+      window.addEventListener('eggmash-user-changed', onUserChange);
+      window.addEventListener('eggmash-theme-changed', onThemeChange);
+      return () => {
+        window.removeEventListener('storage', onUserChange);
+        window.removeEventListener('eggmash-user-changed', onUserChange);
+        window.removeEventListener('eggmash-theme-changed', onThemeChange);
+      };
+    }, []);
+
+    // ── REVEAL OBSERVER ────────
+    useEffect(() => {
+      if (!sentimentRef.current || hasRevealed) return;
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          setHasRevealed(true);
+          observer.disconnect();
+        }
+      }, { threshold: 0.2 });
+      observer.observe(sentimentRef.current);
+      return () => observer.disconnect();
+    }, [hasRevealed]);
+
+    useEffect(() => {
+      const h    = new Date().getHours();
+      const tod  = h < 12 ? 'Hatchery ready' : h < 18 ? 'Position active' : 'After-hours monitor';
+      const name = userEmail !== 'guest' && userEmail !== 'Guest'
+        ? userEmail.split('@')[0].replace(/[_.-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
+        : 'Authorized User';
+      const full = `${tod}, ${name}.`;
+      let i = 0;
+      setGreetDone(false);
+      const timer = setInterval(() => {
+        i++;
+        setGreeting(full.slice(0, i));
+        if (i >= full.length) { clearInterval(timer); setGreetDone(true); }
+      }, 40);
+      return () => clearInterval(timer);
+    }, [userEmail]);
+
+    // ── LOGO ─────────────────────────────────────────────────────
+    // PRIMARY: parqet.com uses TICKER directly → no domain guessing.
+    // Works for Amazon (AMZN), Disney (DIS), McDonald's (MCD), etc.
+    // Fallback chain: parqet → clearbit autocomplete → clearbit derived → ui-avatars
+    const fetchLogoForCompany = async (name, sym) => {
+      // Try parqet first — ticker-based, always correct for stocks
+      setLogoDomain(sym.toLowerCase() + '.parqet');
+      setLogoFallback(0);
+      setLogoSrc(`https://assets.parqet.com/logos/symbol/${sym.toUpperCase()}?format=png`);
+      // Also kick off Clearbit autocomplete in parallel for domain storage
+      // (used as fallback if parqet fails)
+      try {
+        const domainInName = name.match(/\b([a-zA-Z0-9-]+\.com)\b/i);
+        const domain = domainInName ? domainInName[1].toLowerCase() : null;
+        if (domain) { setLogoDomain(domain); return; }
+        const cleanName = name
+          .replace(/\b(inc|incorporated|corp|corporation|ltd|limited|plc|llc|co|group|holdings?|technologies|technology|systems|global|enterprises?|company|industries|financial|finance|partners|trust|fund|services|solutions|international)\b\.?/gi, '')
+          .replace(/[^a-zA-Z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+        const res = await fetch(
+          `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(cleanName||sym)}`,
+          {signal: AbortSignal.timeout(4000)}
+        );
+        if (res.ok) {
+          const list = await res.json();
+          if (list?.[0]?.domain) setLogoDomain(list[0].domain);
+        }
+      } catch {}
+    };
+
+    const onLogoError = () => {
+      // Fallback chain — NO Google favicon (returns grey globe):
+      // 0 = parqet ticker → 1 = clearbit domain → 2 = clearbit ticker → 3 = ui-avatars
+      const next = logoFallback + 1;
+      setLogoFallback(next);
+      const sym2 = ticker.toLowerCase();
+      if (next === 1) {
+        const d = logoDomain.includes('.') ? logoDomain : sym2 + '.com';
+        setLogoSrc(`https://logo.clearbit.com/${d}`);
+      } else if (next === 2) {
+        setLogoSrc(`https://logo.clearbit.com/${sym2}.com`);
+      } else {
+        setLogoSrc(`https://ui-avatars.com/api/?name=${encodeURIComponent(ticker)}&background=111827&color=facc15&bold=true&size=128&font-size=0.45`);
+      }
+    };
+
+    // Initial logo for AAPL on mount
+    useEffect(() => { fetchLogoForCompany('Apple Inc.', 'AAPL'); }, []);
+
+    // ── PROXY FETCH: tries two CORS proxies ─────────────────────
+    const proxyFetch = async (url) => {
+      const proxies = [
+        `https://corsproxy.io/?${encodeURIComponent(url)}`,
+        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&t=${Date.now()}`,
+      ];
+      for (const proxy of proxies) {
+        try {
+          const res = await fetch(proxy, {signal: AbortSignal.timeout(9000)});
+          if (!res.ok) continue;
+          const text = await res.text();
+          if (proxy.includes('allorigins')) {
+            const j = JSON.parse(text);
+            return j.contents;
+          }
+          return text;
+        } catch { continue; }
+      }
+      throw new Error('All proxies failed');
+    };
+
+    // ── SEARCH AUTOCOMPLETE ──────────────────────────────────────
+    const fetchSuggestions = async (q) => {
+      if (!q.trim()) { setSuggestions([]); setShowDrop(false); return; }
+      setDropLoading(true);
+      try {
+        const url  = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=8&newsCount=0`;
+        const text = await proxyFetch(url);
+        const json = JSON.parse(text);
+        const hits = (json.quotes || [])
+          .filter(r => ['EQUITY','ETF','INDEX','MUTUALFUND'].includes(r.quoteType))
+          .slice(0, 8);
+        setSuggestions(hits);
+        setShowDrop(hits.length > 0);
+        if (hits.length > 0) setDropVisible(true);
+      } catch { setSuggestions([]); setShowDrop(false); }
+      setDropLoading(false);
+    };
+
+    const onSearchInput = ev => {
+      const v = ev.target.value;
+      setSearch(v);
+      clearTimeout(dropTimer.current);
+      if (v.length > 0) dropTimer.current = setTimeout(() => fetchSuggestions(v), 260);
+      else { setSuggestions([]); clearTimeout(dropExitTimer.current); setDropVisible(false); setShowDrop(false); }
+    };
+
+    useEffect(() => {
+      const fn = ev => { if (searchRef.current && !searchRef.current.contains(ev.target)) { setDropVisible(false); clearTimeout(dropExitTimer.current); dropExitTimer.current = setTimeout(() => setShowDrop(false), 150); } };
+      document.addEventListener('mousedown', fn);
+      return () => document.removeEventListener('mousedown', fn);
+    }, []);
+
+    // ── MAIN DATA FETCH ──────────────────────────────────────────
+    const fetchTicker = async (sym, nameHint, explicitRange) => {
+      if (fetchingRef.current) return;
+      fetchingRef.current = true;
+      const SYM   = sym.trim().toUpperCase();
+      const range = explicitRange || rangeRef.current;
+      setIsLoading(true);
+      setDropVisible(false); clearTimeout(dropExitTimer.current); dropExitTimer.current = setTimeout(() => setShowDrop(false), 150);
+      setSearch('');
+
+      // Fetch logo immediately using the best API we have
+      if (nameHint) fetchLogoForCompany(nameHint, SYM);
+
+      const RANGES    = {'1D':'1d','5D':'5d','1M':'1mo','6M':'6mo','1Y':'1y','5Y':'5y','MAX':'max'};
+      const INTERVALS = {'1D':'5m','5D':'15m','1M':'1d','6M':'1wk','1Y':'1wk','5Y':'1mo','MAX':'3mo'};
+
+      try {
+        const url  = `https://query1.finance.yahoo.com/v8/finance/chart/${SYM}?interval=${INTERVALS[range]}&range=${RANGES[range]}&includePrePost=false`;
+        const text = await proxyFetch(url);
+        const json = JSON.parse(text);
+        const result = json?.chart?.result?.[0];
+        if (!result) throw new Error('no result');
+
+        const meta = result.meta;
+        const q    = result.indicators.quote[0];
+        const ts   = result.timestamp || [];
+
+        const history = (q.close || []).map((p, i) => ({
+          time: ts[i] || i,
+          price: p, high: q.high?.[i] ?? p, low: q.low?.[i] ?? p, open: q.open?.[i] ?? p,
+        })).filter(d => d.price != null && isFinite(d.price));
+
+        if (!history.length) throw new Error('empty');
+
+        const name      = meta.longName || meta.shortName || SYM;
+        const prevClose = meta.chartPreviousClose ?? meta.previousClose ?? history[0].price;
+        const curPrice  = meta.regularMarketPrice ?? history[history.length-1].price;
+        const change    = curPrice - prevClose;
+        const highs     = history.map(d=>d.high).filter(isFinite);
+        const lows      = history.map(d=>d.low).filter(isFinite);
+
+        // Also fetch logo with actual company name from Yahoo
+        fetchLogoForCompany(name, SYM);
+        setTicker(SYM);
+        setCompanyName(name);
+        setData({
+          name, price: curPrice, change,
+          changePercent: prevClose ? (change/prevClose)*100 : 0,
+          cap:  meta.marketCap ? (meta.marketCap>=1e12?(meta.marketCap/1e12).toFixed(2)+'T':meta.marketCap>=1e9?(meta.marketCap/1e9).toFixed(1)+'B':meta.marketCap>=1e6?(meta.marketCap/1e6).toFixed(1)+'M':meta.marketCap.toFixed(0)) : 'N/A',
+          vol:  meta.regularMarketVolume ? fmtVol(meta.regularMarketVolume) : 'N/A',
+          avgVol: meta.averageDailyVolume3Month ? fmtVol(meta.averageDailyVolume3Month) : 'N/A',
+          pe:   meta.trailingPE?.toFixed(1) ?? 'N/A',
+          open: meta.regularMarketOpen ?? history[0]?.open ?? curPrice,
+          high: meta.regularMarketDayHigh ?? (highs.length?Math.max(...highs):curPrice),
+          low:  meta.regularMarketDayLow  ?? (lows.length ?Math.min(...lows) :curPrice),
+          previousClose: prevClose ?? NaN,
+          bid: meta.bid ?? NaN,
+          ask: meta.ask ?? NaN,
+          fiftyTwoWeekLow: meta.fiftyTwoWeekLow ?? NaN,
+          fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh ?? NaN,
+          beta: meta.beta ?? NaN,
+          dividendYield: meta.trailingAnnualDividendYield ?? NaN,
+          history,
+        });
+      } catch (err) {
+        console.warn('fetchTicker:', err.message);
+        setTicker(SYM);
+        setCompanyName(nameHint || SYM);
+      }
+      setIsLoading(false);
+      fetchingRef.current = false;
+    };
+
+    // Range change — pass range explicitly so no stale closure
+    const changeRange = r => {
+      rangeRef.current = r;
+      setActiveRange(r);
+      fetchTicker(ticker, companyName, r);
+    };
+
+    // ── LIVE TICK — gentle random walk ───────────────────────────
+    useEffect(() => {
+      const iv = setInterval(() => {
+        if (isLoading) return;
+        setData(d => {
+          if (!d.history.length) return d;
+          const last  = d.history[d.history.length-1];
+          const sigma = last.price * 0.00035;
+          const next  = Math.max(0.001, last.price + (Math.random()-0.498)*sigma*2);
+          const hist  = [...d.history.slice(1), {...last, time:last.time+1, price:next}];
+          const base  = hist[0].price;
+          return {...d, price:next, change:next-base, changePercent:base?(next-base)/base*100:0, history:hist};
+        });
+      }, 3000);
+      return () => clearInterval(iv);
+    }, [isLoading]);
+
+    // ── CHART MATH ───────────────────────────────────────────────
+    const prices    = useMemo(() => data.history.map(d=>d.price).filter(isFinite), [data.history]);
+    const maxP      = useMemo(() => prices.length?Math.max(...prices):200, [prices]);
+    const minP      = useMemo(() => prices.length?Math.min(...prices):100, [prices]);
+    const pRange    = useMemo(() => (maxP-minP)||maxP*0.02||1, [maxP,minP]);
+
+    const W=1000,H=260,PL=0,PR=140,PT=12,PB=8;
+    const pW=W-PL-PR, pH=H-PT-PB;
+    const toX = i => PL+(i/Math.max(1,data.history.length-1))*pW;
+    const toY = p => PT+pH-((p-minP)/pRange)*pH;
+
+    const svgPaths = useMemo(() => {
+      const pts = data.history.filter(d=>isFinite(d.price));
+      if (pts.length < 2) return {line:'',fill:''};
+      const line = pts.map((d,i)=>`${i===0?'M':'L'}${toX(i).toFixed(1)},${toY(d.price).toFixed(1)}`).join(' ');
+      return {line, fill:`${line} L${toX(pts.length-1).toFixed(1)},${H} L${PL},${H} Z`};
+    }, [data.history, minP, pRange]);
+
+    const isGreen  = data.change >= 0;
+    const lineClr  = isGreen ? '#22c55e' : '#ef4444';
+
+    const yTicks = useMemo(()=>Array.from({length:5},(_,i)=>{
+      const p=maxP-pRange*(i/4); return {p, y:toY(p)};
+    }), [maxP, pRange]);
+
+    const xTicks = useMemo(()=>{
+      if (data.history.length < 2) return [];
+      return Array.from({length:6},(_,i)=>{
+        const idx=Math.round(i*(data.history.length-1)/5);
+        const ts=data.history[idx]?.time;
+        let lbl='';
+        if (ts && ts>1_000_000) {
+          const d=new Date(ts*1000);
+          lbl = activeRange==='1D' ? d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
+              : ['5D','1M'].includes(activeRange) ? d.toLocaleDateString([],{month:'short',day:'numeric'})
+              : d.toLocaleDateString([],{month:'short',year:'2-digit'});
+        } else { lbl = i===0?'START':i===5?'NOW':''; }
+        return {lbl, xPct:(idx/(data.history.length-1))*100};
+      });
+    }, [data.history, activeRange]);
+
+    const lastPoint = data.history[data.history.length-1] || null;
+    const latestPointPos = lastPoint ? { xPct:(toX(data.history.length-1)/W)*100, yPct:(toY(lastPoint.price)/H)*100 } : null;
+
+    const onChartMM = ev => {
+      if (!chartRef.current || !data.history.length) return;
+      const rect = chartRef.current.getBoundingClientRect();
+      // The SVG plot area is pW/W of the total width (right margin for y-labels).
+      // We must map mouse x into SVG coordinate space, then to data index.
+      const SVG_x = ((ev.clientX - rect.left) / rect.width) * W;
+      const ratio  = Math.max(0, Math.min(1, SVG_x / pW)); // pW = W - PR
+      const idx    = Math.round(ratio * (data.history.length - 1));
+      const pt     = data.history[idx];
+      if (pt) {
+        // Store SVG-space x/y percentages so overlay dots are pixel-perfect
+        const dotLeft = (toX(idx) / W) * 100;           // % of container
+        const dotTop  = (toY(pt.price) / H) * 100;      // % of container
+        setHoverPt({...pt, xPct: dotLeft, yPct: dotTop});
+      }
+    };
+
+    const fmt = n => !isFinite(n)?'—':n>=10000?n.toFixed(0):n>=100?n.toFixed(2):n>=1?n.toFixed(2):n.toFixed(3);
+    const fmtNum = n => !isFinite(n)?'—':Number.isInteger(n)?n.toLocaleString():n.toFixed(2);
+    const fmtVol = n => typeof n === 'number' && isFinite(n)
+      ? n >= 1e9 ? (n/1e9).toFixed(1) + 'B'
+      : n >= 1e6 ? (n/1e6).toFixed(1) + 'M'
+      : n >= 1e3 ? (n/1e3).toFixed(1) + 'K'
+      : n.toFixed(0)
+      : n || '—';
+    const fmtChg = (n,p) => `${n>=0?'▲':'▼'} ${Math.abs(n).toFixed(2)} (${Math.abs(p).toFixed(2)}%)`;
+
+    const summaryRows = [
+      {label:'Market Cap', value:data.cap || '—'},
+      {label:'Volume', value:data.vol || '—'},
+      {label:'P/E', value:data.pe || '—'},
+      {label:'Day Range', value:(isFinite(data.high)&&isFinite(data.low)) ? '$'+fmt(data.high-data.low) : '—'},
+    ];
+
+    const infoRows = [
+      {label:'Previous Close', value: isFinite(data.previousClose) ? '$'+fmt(data.previousClose) : '—'},
+      {label:'Bid / Ask', value:`${isFinite(data.bid)?'$'+fmt(data.bid):'—'} / ${isFinite(data.ask)?'$'+fmt(data.ask):'—'}`},
+      {label:'Avg Volume', value:data.avgVol || '—'},
+      {label:'52W Range', value:(isFinite(data.fiftyTwoWeekLow)&&isFinite(data.fiftyTwoWeekHigh)) ? '$'+fmt(data.fiftyTwoWeekLow)+' - $'+fmt(data.fiftyTwoWeekHigh) : '—'},
+      {label:'Beta', value:isFinite(data.beta)?data.beta.toFixed(2):'—'},
+      {label:'Dividend Yield', value:isFinite(data.dividendYield) ? (data.dividendYield*100).toFixed(2)+'%' : '—'},
+    ];
+
+    // ── SENTIMENT DATA (Mocked for fluid theme consistency) ────────
+    const [sentiment, setSentiment] = useState([]);
+    const [showAllSentiment, setShowAllSentiment] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisTimeLeft, setAnalysisTimeLeft] = useState(0);
+    const [timeUntilUpdate, setTimeUntilUpdate] = useState(15);
+
+    const refreshSentiment = () => {
+      const sources = [
+        { name: 'Bloomberg', domain: 'bloomberg.com' },
+        { name: 'Reuters', domain: 'reuters.com' },
+        { name: 'WSJ', domain: 'wsj.com' },
+        { name: 'Financial Times', domain: 'ft.com' },
+        { name: 'CNBC', domain: 'cnbc.com' },
+        { name: 'Forbes', domain: 'forbes.com' },
+        { name: 'Yahoo Finance', domain: 'finance.yahoo.com' },
+        { name: 'MarketWatch', domain: 'marketwatch.com' },
+        { name: 'The Economist', domain: 'economist.com' },
+        { name: 'Barron\'s', domain: 'barrons.com' },
+        { name: 'Investing.com', domain: 'investing.com' },
+        { name: 'Business Insider', domain: 'businessinsider.com' }
+      ];
+      
+      const getRationale = (s, score) => {
+        if (score > 8) return `AI Analysis: Strong bullish momentum detected. ${s} reporting significant institutional buying and positive quarterly guidance. Correlation with ${ticker} sector strength is high. Prediction: Outperform.`;
+        if (score > 6) return `AI Analysis: Moderate positive sentiment. ${s} highlights increasing market share and stable revenue growth despite macro headwinds. Prediction: Steady climb.`;
+        if (score > 4) return `AI Analysis: Neutral outlook. Mixed signals in recent ${s} reports regarding global supply chain impact and consumer sentiment. Prediction: Consolidation.`;
+        return `AI Analysis: Bearish indicators identified. ${s} citing regulatory headwinds and declining consumer demand in core segments. Technical resistance observed. Prediction: Underperform.`;
+      };
+
+      setIsAnalyzing(true);
+      setAnalysisTimeLeft(15);
+      
+      const picked = sources.sort(() => 0.5 - Math.random()).slice(0, 12);
+      const newSentiment = picked.map(s => {
+        const score = parseFloat((Math.random() * 10).toFixed(2));
+        return {
+          source: s.name,
+          link: `https://www.${s.domain}/search?query=${ticker}`,
+          score: score,
+          rationale: getRationale(s.name, score),
+          trend: Math.random() > 0.5 ? 'up' : 'down'
+        };
+      });
+
+      // Show initial results if list is empty
+      if (sentiment.length === 0) setSentiment(newSentiment);
+
+      const countdown = setInterval(() => {
+        setAnalysisTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(countdown);
+            setIsAnalyzing(false);
+            setTimeUntilUpdate(15); // Reset cycle
+            setSentiment(newSentiment); // Update sentiment after recalibration
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    };
+
+    useEffect(() => {
+      refreshSentiment();
+      setShowAllSentiment(false);
+    }, [ticker]);
+
+    useEffect(() => {
+      if (isAnalyzing) return;
+      const interval = setInterval(() => {
+        setTimeUntilUpdate(prev => {
+          if (prev <= 1) {
+            refreshSentiment();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }, [isAnalyzing, ticker]);
+
+    // SuggLogo: parqet as primary (ticker-based = always correct for stocks)
+    const SuggLogo = React.memo(({name, sym}) => {
+      const [src, setSrc] = useState(`https://assets.parqet.com/logos/symbol/${sym.toUpperCase()}?format=png`);
+      const [fb,  setFb]  = useState(0);
+      const [dom, setDom] = useState(sym.toLowerCase() + '.com');
+
+      // In parallel, fetch the real domain from Clearbit for fallback
+      useEffect(() => {
+        let alive = true;
+        const domInName = name.match(/\b([a-zA-Z0-9-]+\.com)\b/i);
+        if (domInName) { if(alive) setDom(domInName[1].toLowerCase()); return ()=>{alive=false;}; }
+        const cleanN = name
+          .replace(/\b(inc|corp|ltd|llc|plc|co|group|holdings?|technologies|technology|systems|global|enterprises?|company|industries)\b\.?/gi,'')
+          .replace(/[^a-zA-Z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+        fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(cleanN||sym)}`,{signal:AbortSignal.timeout(3500)})
+          .then(r=>r.ok?r.json():null)
+          .then(list=>{ if(alive&&list?.[0]?.domain) setDom(list[0].domain); })
+          .catch(()=>{});
+        return ()=>{alive=false;};
+      },[]);
+
+      const onErr = () => {
+        const n2=fb+1; setFb(n2);
+        if(n2===1) setSrc(`https://logo.clearbit.com/${dom}`);
+        else if(n2===2) setSrc(`https://logo.clearbit.com/${sym.toLowerCase()}.com`);
+        else setSrc(`https://ui-avatars.com/api/?name=${encodeURIComponent(sym)}&background=111827&color=facc15&bold=true&size=64`);
+      };
+
+      return e('img',{src,onError:onErr,style:{width:'100%',height:'100%',objectFit:'contain',padding:3},alt:sym});
+    });
+
+    // ── RENDER ───────────────────────────────────────────────────
+    return e('div', {style:{width:'min(880px, calc(100% - 2rem))',margin:'0 auto',paddingTop:'1.5rem',paddingBottom:'4rem',paddingLeft:'1rem',paddingRight:'1rem'},className:'flex flex-col gap-4 animate-slide-up relative z-10'},
+
+      // ══ GREETING ════════════════════════════════════════════════
+      e('div', {style:{paddingBottom:20,borderBottom:'1px solid rgba(255,255,255,0.07)'}},
+        e('div', {style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}},
+          e('div', {style:{display:'flex',alignItems:'center',gap:10}},
+            e('div', {style:{width:8,height:8,borderRadius:'50%',background:'#facc15',boxShadow:'0 0 10px rgba(250,204,21,0.9)',animation:'status-pulse 1.4s ease-in-out infinite',flexShrink:0}}),
+            e('span', {style:{fontFamily:'"Inter",system-ui,sans-serif',fontSize:11,fontWeight:600,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(250,204,21,0.45)'}}, 'Hatchery Market Terminal'),
+            e('div', {style:{height:1,background:'linear-gradient(90deg,rgba(250,204,21,0.2),transparent)',width:60}})
+          ),
+          // User Plan Badge
+          userEmail !== 'guest' && e('div', { 
+            style: { 
+              display:'flex', alignItems:'center', gap:4, padding:'6px 16px', borderRadius:24, 
+              background: userPlan === 'Omelet' ? 'rgba(34,197,94,0.12)' : userPlan === 'Yolk' ? 'rgba(250,204,21,0.12)' : 'rgba(255,255,255,0.06)',
+              border: `2px solid ${userPlan === 'Omelet' ? 'rgba(34,197,94,0.4)' : userPlan === 'Yolk' ? 'rgba(250,204,21,0.4)' : 'rgba(255,255,255,0.15)'}`,
+              boxShadow: userPlan !== 'Shell' ? '0 0 20px rgba(250,204,21,0.1)' : 'none'
+            } 
+          },
+            e('div', { style: { width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center', marginRight:4 } },
+              e('lottie-player', {
+                src: 'https://assets5.lottiefiles.com/packages/lf20_6p8ovm7e.json',
+                background: 'transparent', speed: '1', loop: true, autoplay: true,
+                style: { width: '100%', height: '100%' }
+              })
+            ),
+            e('span', { style: { fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.05em', color: 'rgba(255,255,255,0.9)' } }, 'Current Plan: '),
+            e('span', { style: { fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.05em', color: userPlan === 'Omelet' ? '#22c55e' : userPlan === 'Yolk' ? '#facc15' : '#94a3b8' } }, userPlan)
+          )
+        ),
+        // The greeting — plain string render, no per-word spans, no re-animation jitter
+        e('div', {style:{display:'flex',flexDirection:'column',gap:6}},
+          e('h1', {
+            style:{
+              fontFamily:'"Inter",system-ui,-apple-system,sans-serif',
+              fontSize:'clamp(28px,4vw,54px)',
+              fontWeight:800,
+              lineHeight:1.08,
+              letterSpacing:'-0.03em',
+              background:'linear-gradient(110deg,#ffffff 0%,#facc15 42%,#fbbf24 72%,#f59e0b 100%)',
+              backgroundSize:'200% 200%',
+              WebkitBackgroundClip:'text',
+              WebkitTextFillColor:'transparent',
+              backgroundClip:'text',
+              animation:greetDone?'greeting-shimmer 5s ease-in-out infinite':'none',
+              minHeight:'1.1em',
+              display:'block',
+            }
+          },
+            greeting || '\u00A0',
+            // Blinking cursor
+            e('span', {style:{
+              display:'inline-block',width:3,height:'0.78em',background:'#facc15',
+              borderRadius:2,marginLeft:5,verticalAlign:'middle',
+              animation:'greeting-cursor-blink 1s steps(1) infinite',
+              boxShadow:'0 0 8px rgba(250,204,21,0.7)',
+            }})
+          ),
+          // Animated subheading
+          e('p', {style:{
+            fontFamily:'"Inter",system-ui,sans-serif',
+            fontSize:'clamp(14px,1.8vw,24px)',
+            fontWeight:600,
+            letterSpacing:'0.08em',
+            background:'linear-gradient(90deg,rgba(203,213,225,0.9) 0%,rgba(250,204,21,0.8) 50%,rgba(203,213,225,0.7) 100%)',
+            backgroundSize:'200% 200%',
+            WebkitBackgroundClip:'text',
+            WebkitTextFillColor:'transparent',
+            backgroundClip:'text',
+            animation:'sub-shimmer 3.5s ease-in-out infinite',
+            margin:0,
+          }},
+            'Calculating high-probability cracks.'
+          )
+        )
+      ),
+
+      // ══ TICKER HEADER ═══════════════════════════════════════════
+      e('div', {style:{display:'flex',flexWrap:'wrap',justifyContent:'space-between',alignItems:'flex-start',gap:24}},
+
+        // Logo + name
+        e('div', {style:{display:'flex',alignItems:'center',gap:16}},
+          // Logo box — white bg so all logos show correctly
+          e('div', {style:{
+            width:56,height:56,borderRadius:12,background:'rgba(255,255,255,0.85)',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            overflow:'hidden',flexShrink:0,
+            border:`3px solid ${isGreen?'rgba(34,197,94,0.4)':'rgba(239,68,68,0.3)'}`,
+            boxShadow:`0 8px 32px ${isGreen?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.12)'}`,
+            transition:'background 0.3s ease',
+          }},
+            logoSrc
+              ? e('img', {
+                  key: logoSrc, // key forces re-mount when src changes
+                  src: logoSrc,
+                  onError: onLogoError,
+                  style:{width:'100%',height:'100%',objectFit:'contain',padding:4,borderRadius:12,background:'#fff'},
+                  alt: companyName,
+                })
+              : e('div',{style:{fontSize:22,fontWeight:800,color:'rgba(100,116,139,0.4)'}}, ticker.slice(0,1))
+          ),
+          e('div', {},
+            e('div',{style:{fontSize:'clamp(22px,3vw,38px)',fontWeight:800,color:'#fff',letterSpacing:'-0.025em',lineHeight:1.1}}, ticker),
+            e('p',{style:{fontSize:12,color:'rgba(148,163,184,0.65)',marginTop:3,fontWeight:500,maxWidth:280,fontFamily:'"Inter",sans-serif',lineHeight:'1.4'}}, companyName),
+            e('div',{style:{display:'flex',alignItems:'center',gap:6,marginTop:6}},
+              e('div',{style:{width:6,height:6,borderRadius:'50%',background:'#22c55e',boxShadow:'0 0 6px rgba(34,197,94,0.8)',animation:'status-pulse 1.4s infinite'}}),
+              e('span',{style:{fontSize:9,color:'#22c55e',letterSpacing:'0.18em',fontWeight:700,textTransform:'uppercase',fontFamily:'"Inter",sans-serif'}},'LIVE')
+            )
+          )
+        ),
+
+        // Price + search
+        e('div', {style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:14}},
+          e('div',{style:{display:'flex',alignItems:'baseline',gap:12,flexWrap:'wrap',justifyContent:'flex-end'}},
+            e('span',{style:{fontSize:'clamp(24px,3.5vw,46px)',fontWeight:800,color:'#fff',letterSpacing:'-0.03em',fontVariantNumeric:'tabular-nums',fontFamily:'"Inter",sans-serif'}},
+              '$'+data.price.toFixed(2)),
+            e('span',{style:{fontSize:'clamp(13px,1.5vw,18px)',fontWeight:700,color:lineClr,fontFamily:'"Inter",sans-serif'}},
+              fmtChg(data.change, data.changePercent))
+          ),
+
+          // Search
+          e('div',{style:{position:'relative'},ref:searchRef},
+            e('form',{
+              onSubmit:ev=>{ev.preventDefault();if(search.trim())fetchTicker(search.trim());},
+              style:{display:'flex',gap:8},
+            },
+              e('div',{style:{position:'relative'}},
+                e('input',{
+                  type:'text', placeholder:'Ticker or company name...', value:search,
+                  onChange:onSearchInput, onFocus:()=>suggestions.length&&setDropVisible(true)&&setShowDrop(true),
+                  onKeyDown: ev => { if(ev.key==='Escape'){ setDropVisible(false); setTimeout(()=>setShowDrop(false),150); } },
+                  autoComplete:'off', spellCheck:false,
+                  className:'market-search-input',
+                  style:{
+                    background:'rgba(255,255,255,0.07)',border:'2px solid rgba(255,255,255,0.12)',
+                    borderRadius:14,padding:'11px 42px 11px 16px',color:'#fff',fontSize:13,
+                    fontWeight:500,width:270,outline:'none',
+                    fontFamily:'"Inter",system-ui,sans-serif',
+                    transition:'border-color 0.2s, box-shadow 0.2s',
+                  },
+                }),
+                dropLoading&&e('div',{style:{
+                  position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',
+                  width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',
+                  pointerEvents:'none',
+                }},
+                  e('lottie-player',{src:'https://assets2.lottiefiles.com/packages/lf20_1pxqjqps.json',background:'transparent',speed:1.8,loop:true,autoplay:true,style:{width:28,height:28}})
+                )
+              ),
+              e('button',{
+                type:'submit',
+                style:{
+                  background:'#facc15',color:'#0f172a',border:'none',borderRadius:12,
+                  padding:'11px 18px',fontWeight:800,fontSize:12,cursor:'pointer',
+                  fontFamily:'"Inter",sans-serif',letterSpacing:'0.04em',
+                },
+              },'SCAN')
+            ),
+
+            // Animated dropdown with enter/exit transitions
+            (showDrop || dropVisible) && suggestions.length > 0 && e('div', {
+              className: 'market-dropdown ' + (dropVisible ? 'open' : 'closed'),
+              style:{
+                position:'absolute', top:'calc(100% + 10px)', left:0,
+                background:'rgba(7,9,26,0.97)',
+                border:'1px solid rgba(255,255,255,0.1)',
+                borderRadius:18, overflow:'hidden', zIndex:600,
+                minWidth:340, maxWidth:460,
+                boxShadow:'0 28px 70px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)',
+                backdropFilter:'blur(28px)',
+              }
+            },
+              // Header row
+              e('div',{style:{
+                padding:'10px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)',
+                display:'flex', justifyContent:'space-between', alignItems:'center',
+                background:'rgba(255,255,255,0.02)',
+              }},
+                e('div',{style:{display:'flex',alignItems:'center',gap:8}},
+                  e('div',{style:{width:6,height:6,borderRadius:'50%',background:'#22c55e',boxShadow:'0 0 6px #22c55e',animation:'status-pulse 1.4s infinite'}}),
+                  e('span',{style:{fontSize:9,fontWeight:700,color:'rgba(148,163,184,0.5)',letterSpacing:'0.16em',textTransform:'uppercase',fontFamily:'"Inter",sans-serif'}},'Live Results')
+                ),
+                e('span',{style:{fontSize:9,fontWeight:700,color:'rgba(250,204,21,0.7)',fontFamily:'"Inter",sans-serif',background:'rgba(250,204,21,0.08)',padding:'2px 8px',borderRadius:20}},suggestions.length+' found')
+              ),
+              // Result rows
+              suggestions.map((q,i)=>e('button',{
+                key:q.symbol+i, type:'button',
+                className:'sugg-row',
+                style:{
+                  width:'100%', display:'flex', alignItems:'center', gap:12,
+                  padding:'11px 16px',
+                  borderBottom: i < suggestions.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  background:'transparent', border:'none', cursor:'pointer', textAlign:'left',
+                },
+                onMouseDown:ev=>{ev.preventDefault(); fetchTicker(q.symbol, q.longname||q.shortname);},
+              },
+                // Logo
+                e('div',{style:{
+                  width:36,height:36,borderRadius:10,background:'#fff',
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  overflow:'hidden',flexShrink:0,
+                  boxShadow:'0 2px 8px rgba(0,0,0,0.3)',
+                }},
+                  e(SuggLogo,{name:q.longname||q.shortname||q.symbol, sym:q.symbol})
+                ),
+                // Info
+                e('div',{style:{flex:1,minWidth:0}},
+                  e('div',{style:{display:'flex',alignItems:'center',gap:6,marginBottom:3}},
+                    e('span',{style:{fontSize:13,fontWeight:800,color:'#facc15',fontFamily:'"Inter",sans-serif',letterSpacing:'0.01em'}},q.symbol),
+                    e('span',{style:{
+                      fontSize:8,fontWeight:700,color:'rgba(100,116,139,0.6)',
+                      border:'1px solid rgba(255,255,255,0.08)',borderRadius:4,
+                      padding:'2px 5px',fontFamily:'"Inter",sans-serif',
+                      background:'rgba(255,255,255,0.03)',
+                    }},q.quoteType||'EQ'),
+                    q.exchange&&e('span',{style:{fontSize:8,color:'rgba(100,116,139,0.4)',fontFamily:'"Inter",sans-serif'}},q.exchange)
+                  ),
+                  e('div',{style:{fontSize:12,color:'rgba(203,213,225,0.7)',fontFamily:'"Inter",sans-serif',fontWeight:500,lineHeight:'1.3'}},
+                    q.longname||q.shortname||'—')
+                ),
+                // Arrow
+                e('div',{style:{
+                  width:26,height:26,borderRadius:8,
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  background:'rgba(255,255,255,0.04)',flexShrink:0,
+                  color:'rgba(100,116,139,0.4)',fontSize:14,
+                  transition:'all 0.15s',
+                }},'›')
+              )),
+              // Footer hint
+              e('div',{style:{padding:'8px 16px',background:'rgba(255,255,255,0.01)',borderTop:'1px solid rgba(255,255,255,0.05)',display:'flex',alignItems:'center',gap:6}},
+                e('span',{style:{fontSize:8,color:'rgba(100,116,139,0.3)',fontFamily:'"Inter",sans-serif'}},'↵ select · esc close')
+              )
+            )
+          )
+        )
+      ),
+
+      // ══ CHART + STATS ═══════════════════════════════════════════
+      e('div',{style:{display:'flex',flexDirection:'column',gap:16}},
+
+        // Chart
+        e('div',{style:{background:'linear-gradient(180deg, rgba(8,12,30,0.98), rgba(12,17,42,0.92))',border:'1px solid rgba(250,204,21,0.12)',borderRadius:26,padding:22,display:'flex',flexDirection:'column',gap:14}},
+
+          // Controls
+          e('div',{style:{display:'flex',flexWrap:'wrap',justifyContent:'space-between',alignItems:'center',gap:10}},
+            e('div',{style:{display:'flex',gap:20}},
+              [['Open',data.open,'rgba(203,213,225,0.8)'],['High',data.high,'#4ade80'],['Low',data.low,'#f87171']].map(([l,v,c])=>
+                e('div',{key:l,style:{display:'flex',flexDirection:'column',gap:2}},
+                  e('span',{style:{fontSize:9,color:'rgba(100,116,139,0.55)',textTransform:'uppercase',letterSpacing:'0.1em',fontWeight:700,fontFamily:'"Inter",sans-serif'}},l),
+                  e('span',{style:{fontSize:13,color:c,fontWeight:700,fontVariantNumeric:'tabular-nums',fontFamily:'"Inter",sans-serif'}},'$'+fmt(v))
+                )
+              )
+            ),
+            e('div',{style:{display:'flex',gap:2,background:'rgba(255,255,255,0.04)',borderRadius:10,padding:2}},
+              ['1D','5D','1M','6M','1Y','5Y','MAX'].map(t=>
+                e('button',{
+                  key:t, onClick:()=>changeRange(t),
+                  style:{
+                    padding:'5px 11px',borderRadius:8,border:'none',cursor:'pointer',
+                    fontWeight:700,fontSize:10,fontFamily:'"Inter",sans-serif',
+                    background:activeRange===t?'#facc15':'transparent',
+                    color:activeRange===t?'#0f172a':'rgba(100,116,139,0.65)',
+                    transition:'all 0.15s',
+                  },
+                },t)
+              )
+            )
+          ),
+
+          // Chart area — ALWAYS 260px, loading overlaid on top (no layout shift)
+          e('div',{style:{height:260,position:'relative'}},
+            // The chart (always rendered, just invisible during load)
+            e('div',{
+              ref:chartRef,
+              style:{
+                height:260, position:'absolute', inset:0, cursor:'crosshair',
+                opacity: isLoading ? 0 : 1,
+                transition:'opacity 0.35s ease',
+                pointerEvents: isLoading ? 'none' : 'auto',
+              },
+              onMouseMove:onChartMM, onMouseLeave:()=>setHoverPt(null),
+            },
+                e('svg',{
+                  viewBox:`0 0 ${W} ${H}`, width:'100%', height:'100%',
+                  preserveAspectRatio:'none',
+                  style:{position:'absolute',inset:0,display:'block',overflow:'visible'},
+                },
+                  e('defs',{},
+                    e('linearGradient',{id:'cg2',x1:'0',y1:'0',x2:'0',y2:'1'},
+                      e('stop',{offset:'0%',stopColor:lineClr,stopOpacity:'0.4'}),
+                      e('stop',{offset:'100%',stopColor:lineClr,stopOpacity:'0'})
+                    )
+                  ),
+                  yTicks.map((t,i)=>e('line',{key:'g'+i,x1:PL,y1:t.y,x2:W-PR,y2:t.y,stroke:'rgba(255,255,255,0.04)',strokeWidth:1})),
+                  svgPaths.fill&&e('path',{d:svgPaths.fill,fill:'url(#cg2)',className:'stock-graph-area'}),
+                  svgPaths.line&&e('path',{d:svgPaths.line,fill:'none',stroke:lineClr,strokeWidth:2.8,strokeLinejoin:'round',strokeLinecap:'round',className:'stock-graph-line',style:{filter:`drop-shadow(0 0 12px ${lineClr}40)`}}),
+                  yTicks.map((t,i)=>e('text',{key:'yl'+i,x:W-PR+8,y:t.y+4,fill:'rgba(100,116,139,0.6)',fontSize:11,fontFamily:'Inter,monospace',fontWeight:600,textAnchor:'start',dominantBaseline:'middle'},'$'+fmt(t.p))),
+                  // Hover elements are HTML overlays below (avoids SVG coordinate mismatch)
+                ),
+                latestPointPos && e('div',{className:'chart-latest-dot',style:{left:latestPointPos.xPct+'%',top:latestPointPos.yPct+'%'}}),
+                latestPointPos && e('div',{className:'chart-latest-label',style:{left:latestPointPos.xPct+'%',top:latestPointPos.yPct+'%'}},`$${lastPoint.price.toFixed(2)} latest`),
+                // ── HTML hover overlays (pixel-perfect position) ───────
+                hoverPt && e('div',{
+                  className:'chart-hover-vline', pointerEvents:'none',
+                  style:{left: hoverPt.xPct + '%', background:'none'}
+                }),
+                hoverPt && e('div',{
+                  className:'chart-hover-dot',
+                  style:{
+                    left: hoverPt.xPct + '%', top: hoverPt.yPct + '%',
+                    border:`3px solid ${lineClr}`,
+                    boxShadow:`0 0 12px ${lineClr}`,
+                  }
+                }),
+                // X-axis ticks
+                e('div',{style:{position:'absolute',bottom:0,left:PL,right:PR,display:'flex',justifyContent:'space-between',pointerEvents:'none'}},
+                  xTicks.map((t,i)=>e('span',{key:i,style:{fontSize:9,color:'rgba(100,116,139,0.4)',fontWeight:600,fontFamily:'"Inter",sans-serif'}},t.lbl))
+                ),
+                hoverPt&&e('div',{style:{
+                  position:'absolute',top:8,pointerEvents:'none',zIndex:20,
+                  ...(hoverPt.xPct>60?{right:`calc(${100-hoverPt.xPct}% + 16px)`}:{left:`calc(${hoverPt.xPct}% + 16px)`}),
+                }},
+                  e('div',{style:{background:'rgba(6,9,22,0.97)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:14,padding:14,minWidth:155,backdropFilter:'blur(16px)'}},
+                    e('div',{style:{fontSize:9,color:'rgba(100,116,139,0.45)',textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:700,marginBottom:10,paddingBottom:8,borderBottom:'1px solid rgba(255,255,255,0.07)',display:'flex',justifyContent:'space-between',fontFamily:'"Inter",sans-serif'}},
+                      'Price feed',
+                      e('div',{style:{width:6,height:6,borderRadius:'50%',background:'#facc15',animation:'status-pulse 1.4s infinite'}})
+                    ),
+                    [['Price',hoverPt.price,'#fff'],['High',hoverPt.high,'#4ade80'],['Low',hoverPt.low,'#f87171']].map(([l,v,c])=>
+                      isFinite(v)&&v>0&&e('div',{key:l,style:{display:'flex',justifyContent:'space-between',gap:18,marginBottom:4}},
+                        e('span',{style:{fontSize:9,color:'rgba(100,116,139,0.5)',fontWeight:600,fontFamily:'"Inter",sans-serif'}},l),
+                        e('span',{style:{fontSize:12,color:c,fontWeight:700,fontVariantNumeric:'tabular-nums',fontFamily:'"Inter",sans-serif'}},'$'+v.toFixed(2))
+                      )
+                    )
+                  )
+                )
+              )
+            ),
+            // Loading overlay — Lottie, fixed position, fades in/out
+            e('div',{
+              className: isLoading ? 'chart-overlay-in' : 'chart-overlay-out',
+              style:{
+                position:'absolute', inset:0,
+                display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                gap:12, pointerEvents:'none',
+                background:'rgba(8,12,30,0.75)',
+                borderRadius:16,
+                opacity: isLoading ? 1 : 0,
+              }
+            },
+              e('lottie-player',{
+                src:'https://assets2.lottiefiles.com/packages/lf20_1pxqjqps.json',
+                background:'transparent', speed:1.1, loop:true, autoplay:true,
+                style:{width:110,height:110},
+              }),
+              e('span',{style:{fontSize:10,color:'rgba(250,204,21,0.55)',letterSpacing:'0.18em',fontWeight:700,textTransform:'uppercase',fontFamily:'"Inter",sans-serif'}},'Fetching...')
+            )
+          ),
+        ),
+
+        // Horizontal data panel below chart — balanced 5x2 grid
+        e('div',{style:{background:'linear-gradient(90deg, rgba(8,12,30,0.72), rgba(15,23,42,0.65))',border:'1px solid rgba(250,204,21,0.08)',borderRadius:16,padding:'16px 20px'}},
+          e('div',{style:{display:'grid',gridTemplateColumns:'repeat(5, 1fr)',gap:'20px 14px',alignItems:'center',textAlign:'center'}},
+            [summaryRows[0], summaryRows[1], summaryRows[2], infoRows[2], infoRows[0],
+             summaryRows[3], infoRows[3], infoRows[4], infoRows[5], infoRows[1]].map((item,idx)=>e('div',{key:item.label,style:{display:'flex',flexDirection:'column',gap:4}},
+              e('span',{style:{fontSize:8,color:'rgba(148,163,184,0.55)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',fontFamily:'"Inter",sans-serif',lineHeight:'1.2'}},item.label),
+              e('span',{style:{fontSize:13,color:'#fff',fontWeight:800,fontFamily:'"Inter",sans-serif',fontVariantNumeric:'tabular-nums'}},item.value)
+            ))
+          )
+        ),
+
+        // ── NEWS SENTIMENT ANALYSIS ──
+        e('div', { 
+          ref: sentimentRef,
+          className: `mt-6 p-8 rounded-[40px] border-[3px] backdrop-blur-3xl transition-all duration-1000 relative min-h-[500px] shadow-neon overflow-hidden`,
+          style: {
+            background: isDay ? 'rgba(224, 242, 254, 0.85)' : 'rgba(9, 14, 34, 0.96)',
+            borderColor: isDay ? 'rgba(14, 165, 233, 0.3)' : 'rgba(255, 255, 255, 0.16)'
+          }
+        },
+          // SECTION HEADER
+          e('div', { className: 'flex items-center justify-between mb-12 relative z-10' },
+            e('div', { className: 'flex items-center gap-4' },
+              e('div', { className: 'p-3 rounded-2xl bg-brand-yellow/10 border border-brand-yellow/30 shadow-neon' },
+                e('svg', { width: '24', height: '24', viewBox: '0 0 24 24', fill: 'none', stroke: '#facc15', strokeWidth: '3', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                  e('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
+                )
+              ),
+              e('div', {},
+                e('h3', { className: `text-[15px] font-black ${isDay ? 'text-slate-900' : 'text-white'} uppercase tracking-[0.3em] leading-none mb-2` }, 'AI Sentiment Core'),
+                e('p', { className: `text-[10px] font-black ${isDay ? 'text-slate-500' : 'text-slate-600'} uppercase tracking-[0.2em]` }, 'Real-time Intelligence Stream')
+              )
+            ),
+            e('div', { className: `flex items-center gap-4 px-4 py-2.5 rounded-xl ${isDay ? 'bg-slate-200' : 'bg-white/5'} border border-white/5` },
+              isAnalyzing ? 
+                e('div', { className: 'flex items-center gap-3' },
+                  e('div', { className: 'w-2 h-2 rounded-full bg-brand-yellow animate-spin border-b-2 border-transparent' }),
+                  e('span', { className: 'text-[10px] font-black text-brand-yellow uppercase tracking-widest tabular-nums' }, `Calibrating: ${analysisTimeLeft}s`)
+                ) :
+                e('div', { className: 'flex items-center gap-5' },
+                  e('div', { className: 'flex items-center gap-2' },
+                    e('div', { className: 'w-1.5 h-1.5 rounded-full bg-slate-500' }),
+                    e('span', { className: `text-[8px] font-black ${isDay ? 'text-slate-600' : 'text-slate-500'} uppercase tracking-[0.2em] tabular-nums` }, `Idle: ${timeUntilUpdate}s`)
+                  ),
+                  e('div', { className: 'flex items-center gap-2' },
+                    e('div', { className: 'w-2 h-2 rounded-full bg-brand-green animate-pulse shadow-[0_0_8px_#22c55e]' }),
+                    e('span', { className: `text-[10px] font-black ${isDay ? 'text-slate-900' : 'text-slate-300'} uppercase tracking-tight` }, 'Core Ready')
+                  )
+                )
+            )
+          ),
+
+          // THEMED INTEGRATED LOADING OVERLAY
+          (!hasRevealed || (isAnalyzing && sentiment.length === 0)) && e('div', { 
+            className: `absolute inset-0 z-50 flex flex-col items-center justify-center ${isDay ? 'bg-slate-50/95' : 'bg-slate-950/95'} transition-all duration-1000 ease-in-out` 
+          },
+            e('div', { className: 'relative w-80 h-80 mb-10' },
+              e('lottie-player', {
+                src: 'https://assets9.lottiefiles.com/packages/lf20_m6cuL6.json',
+                background: 'transparent', speed: '1.2', loop: true, autoplay: true,
+                style: { width: '100%', height: '100%', filter: isDay ? 'invert(1) brightness(0.2)' : 'none' }
+              }),
+              e('div', { className: 'absolute inset-0 flex items-center justify-center' },
+                e('div', { className: 'w-48 h-48 rounded-full border-4 border-dashed border-brand-yellow/10 animate-[spin_12s_linear_infinite]' })
+              )
+            ),
+            e('div', { className: 'flex flex-col items-center gap-8' },
+              e('div', { className: 'flex flex-col items-center' },
+                e('span', { className: `text-[16px] font-black ${isDay ? 'text-slate-900' : 'text-brand-yellow'} uppercase tracking-[0.6em] mb-3 animate-pulse` }, 'Initializing Yolk AI'),
+                e('span', { className: `text-[10px] font-bold ${isDay ? 'text-slate-500' : 'text-slate-600'} uppercase tracking-[0.4em]` }, 'Parsing Global News Stream')
+              ),
+              e('div', { className: `w-72 h-1 ${isDay ? 'bg-slate-200' : 'bg-white/5'} rounded-none overflow-hidden p-0 relative` },
+                e('div', { 
+                  className: 'h-full bg-brand-yellow shadow-[0_0_20px_#facc15] transition-all duration-1000 ease-linear',
+                  style: { width: `${((15-analysisTimeLeft)/15)*100}%` }
+                })
+              )
+            )
+          ),
+
+          // MARKET VERDICT HERO
+          e('div', { className: `mb-14 p-8 rounded-[24px] ${isDay ? 'bg-slate-200/50' : 'bg-white/5'} border border-white/5 relative overflow-hidden transition-all duration-1000 ${!hasRevealed ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}` },
+            e('div', { className: 'relative z-10 flex flex-col lg:flex-row items-center gap-12' },
+              // Large Score Display
+              e('div', { className: `flex flex-col items-center justify-center min-w-[200px] border-r ${isDay ? 'border-slate-300' : 'border-white/10'} pr-12` },
+                e('span', { className: `text-[10px] font-black ${isDay ? 'text-slate-500' : 'text-slate-600'} uppercase tracking-[0.3em] mb-4` }, 'Final Verdict'),
+                e('div', { className: 'flex items-baseline gap-2' },
+                  e('span', { 
+                    className: `text-7xl font-black italic font-mono tracking-tighter transition-all duration-1000`,
+                    style: { 
+                      color: (sentiment.reduce((acc, s) => acc + s.score, 0) / (sentiment.length || 1)) > 7 ? '#22c55e' : (sentiment.reduce((acc, s) => acc + s.score, 0) / (sentiment.length || 1)) > 4 ? '#facc15' : '#ef4444',
+                      textShadow: `0 0 40px currentColor`
+                    } 
+                  }, 
+                    (sentiment.reduce((acc, s) => acc + s.score, 0) / (sentiment.length || 1)).toFixed(2)
+                  ),
+                  e('span', { className: `text-sm font-black ${isDay ? 'text-slate-500' : 'text-slate-700'} mb-2` }, '/10.0')
+                )
+              ),
+              // Narrative Summary
+              e('div', { className: 'flex-1 space-y-6' },
+                e('div', {},
+                  e('div', { className: 'flex items-center gap-3 mb-3' },
+                    e('div', { className: 'w-2 h-2 rounded-full bg-brand-yellow' }),
+                    e('h4', { className: `text-[12px] font-black ${isDay ? 'text-slate-900' : 'text-slate-200'} uppercase tracking-[0.2em]` }, 'Operational Narrative')
+                  ),
+                  e('p', { className: `text-[12px] leading-relaxed ${isDay ? 'text-slate-700' : 'text-slate-400'} font-bold font-mono` },
+                    'AI analysis of institutional cycles reveals a ',
+                    e('span', { className: 'text-brand-yellow underline underline-offset-4' }, (sentiment.reduce((acc, s) => acc + s.score, 0) / (sentiment.length || 1)) > 5 ? 'Bullish Drift' : 'Bearish Tension'),
+                    '. The current price share metrics are coupled with intense high-velocity global intelligence streams.'
+                  )
+                ),
+                e('div', { className: `pt-5 border-t ${isDay ? 'border-slate-300' : 'border-white/10'}` },
+                  e('p', { className: `text-[11px] leading-relaxed ${isDay ? 'text-slate-800' : 'text-slate-300'} font-bold` },
+                    (sentiment.reduce((acc, s) => acc + s.score, 0) / (sentiment.length || 1)) > 7 ?
+                      `Strategy: MAXIMUM EXPOSURE. Model detects a high-probability breakout shell. Deploy capital with aggressive risk-on parameters.` :
+                    (sentiment.reduce((acc, s) => acc + s.score, 0) / (sentiment.length || 1)) > 5 ?
+                      `Strategy: STEADY ACCUMULATION. Healthy hatchery conditions observed. Maintain existing positions and scale into cracks on dips.` :
+                    (sentiment.reduce((acc, s) => acc + s.score, 0) / (sentiment.length || 1)) > 3 ?
+                      `Strategy: CAUTIOUS NEUTRALITY. Market pan is heating unevenly. Consolidation likely. Wait for clear directional cracking before entry.` :
+                      `Strategy: RISK MITIGATION. Model detects systemic yolk leakage. Exit non-essential positions immediately. Hedging protocols active.`
+                  )
+                )
+              )
+            ),
+            // Decorative scanline
+            e('div', { className: 'absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-[3000ms] pointer-events-none' })
+          ),
+          
+          // SOURCE GRID
+          e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-2 relative z-10' },
+            sentiment.slice(0, showAllSentiment ? 12 : 4).map((item, idx) => e(SentimentRow, { 
+              key: item.source + idx, 
+              item, 
+              index: idx,
+              isAnalyzing, 
+              hasRevealed,
+              isDay 
+            }))
+          ),
+
+          // TOGGLE BUTTON
+          e('button', {
+            onClick: () => !isAnalyzing && setShowAllSentiment(!showAllSentiment),
+            disabled: isAnalyzing,
+            className: `w-full mt-10 py-5 rounded-2xl border-2 border-dashed transition-all duration-300 ${isAnalyzing ? 'opacity-20 cursor-wait' : (isDay ? 'border-slate-300 bg-white text-slate-900 hover:border-brand-yellow hover:text-brand-yellow' : 'border-white/10 bg-white/5 text-slate-400 hover:border-brand-yellow/40 hover:text-brand-yellow')} text-[11px] font-black uppercase tracking-[0.4em] cursor-pointer`
+          }, 
+            isAnalyzing ? 'Processing Intelligence...' : (showAllSentiment ? 'Collapse Intelligence Feed' : `Decode ${sentiment.length - 4}+ Intelligence Sources`)
+          )
+        )
+      );
+  };
+
+
+  /* ─── AuthPage (unchanged from original) ────────────────────── */
+  const AuthPage = () => {
+    const [view, setView] = useState('login'); 
+    const [user, setUser] = useState(null);
+    const [transitioning, setTransitioning] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [feedback, setFeedback] = useState({ type: 'none', message: '' });
+    const [complexity, setComplexity] = useState(0);
+
+    const switchView = (newView) => {
+      if (view === newView) return;
+      setTransitioning(true);
+      setTimeout(() => {
+        setView(newView);
+        setFeedback({ type: 'none', message: '' });
+        setConfirmPassword('');
+        setTransitioning(false);
+      }, 250);
+    };
+
+    const triggerEggCrash = (userData) => {
+      setUser(userData);
+      if (userData && userData.email) {
+        localStorage.setItem('eggmash_current_user', userData.email);
+        window.dispatchEvent(new CustomEvent('eggmash-user-changed', { detail: { email: userData.email } }));
+      }
+      window.isLoginTransition = true;
+      if (typeof openLoader === 'function') openLoader('home', 'login');
+    };
+
+    useEffect(() => {
+      const storedUser = localStorage.getItem('eggmash_current_user');
+      if (storedUser) setUser({ email: storedUser });
+      if (typeof runHeaderTypewriter === 'function') runHeaderTypewriter();
+    }, [view]);
+
+    useEffect(() => {
+      let score = 0;
+      if (password.length > 5) score += 20; if (password.length > 10) score += 20;
+      if (/[A-Z]/.test(password)) score += 20; if (/[0-9]/.test(password)) score += 20;
+      if (/[^A-Za-z0-9]/.test(password)) score += 20;
+      setComplexity(score);
+    }, [password]);
+
+    const handleSubmit = (ev) => {
+      ev.preventDefault(); setLoading(true); setFeedback({ type: 'none', message: '' });
+      if (view === 'forgot') {
+        setTimeout(() => {
+          setFeedback({ type: 'success', message: 'TERMINAL RESET SIGNAL DISPATCHED. VERIFY UPLINK.' });
+          setLoading(false);
+          setTimeout(() => switchView('login'), 2500);
+        }, 1500);
+        return;
+      }
+      if (view === 'signup' && password !== confirmPassword) {
+        setTimeout(() => { setFeedback({ type: 'error', message: 'ACCESS DENIED: PASSWORDS DO NOT MATCH.' }); setLoading(false); }, 400);
+        return;
+      }
+      setTimeout(() => {
+        const users = JSON.parse(localStorage.getItem('eggmash_users') || '[]');
+        if (view === 'login') {
+          const found = users.find(u => u.email === email && u.password === password);
+          if (found || email === 'demo@hatchery.com') {
+            const plan = found?.plan || 'Shell';
+            setFeedback({ type: 'success', message: 'ACCESS GRANTED. DATA SYNC COMPLETE.' });
+            localStorage.setItem('eggmash_current_plan', plan);
+            triggerEggCrash({ email, plan });
+          } else {
+            setFeedback({ type: 'error', message: 'ACCESS DENIED: IDENTIFIER OR SEQUENCE INVALID.' });
+          }
+        } else {
+          if (users.find(u => u.email === email)) {
+            setFeedback({ type: 'error', message: 'ACCESS DENIED: IDENTIFIER ALREADY IN HATCHERY.' });
+          } else {
+            users.push({ email, password, plan: 'Shell' });
+            localStorage.setItem('eggmash_users', JSON.stringify(users));
+            setFeedback({ type: 'success', message: 'IDENTITY CREATED. INITIALIZING SESSION...' });
+            setTimeout(() => switchView('login'), 2500);
+          }
+        }
+        setLoading(false);
+      }, 1200);
+    };
+
+    const handleSocialLogin = (provider) => {
+      setLoading(true); setFeedback({ type: 'none', message: '' });
+      setTimeout(() => {
+        setFeedback({ type: 'success', message: 'UPLINK SUCCESS: ' + provider + ' SYNCED.' });
+        setLoading(false);
+        triggerEggCrash({ email: provider.toLowerCase() + '@hatchery.com' });
+      }, 1000);
+    };
+
+    const isLogin = view === 'login';
+    const isSignup = view === 'signup';
+    const isForgot = view === 'forgot';
+
+    return e('div', { style:{width:'min(560px, calc(100% - 2rem))',margin:'0 auto',padding:'0.75rem'}, className: 'mx-auto max-md py-4' },
+      e('div', { className: 'flex flex-col gap-8 transition-all duration-300 ' + (feedback.type === 'error' ? 'animate-shake' : '') + ' ' + (transitioning ? 'opacity-0 -translate-x-4' : 'opacity-100 translate-x-0') },
+        e('div', { className: 'text-center' },
+          e('div', { className: 'inline-flex items-center gap-3 rounded-full ' + (isForgot ? 'bg-brand-red/10 text-brand-red' : isLogin ? 'bg-brand-yellow/10 text-brand-yellow' : 'bg-brand-green/10 text-brand-green') + ' px-4 py-2 text-sm font-semibold mb-4 transition-colors' },
+            e('div', { className: 'status-dot ' + (isForgot ? 'bg-brand-red' : isLogin ? 'bg-brand-yellow' : 'bg-brand-green') }),
+            isForgot ? 'Recovery Protocol' : (isLogin ? 'Access Terminal' : 'Create Identity')
+          ),
+          e('h2', { className: 'text-2xl font-bold text-white mb-2 uppercase' }, isForgot ? 'Lost Identifier?' : (isLogin ? 'Welcome Back' : 'Join Hatchery')),
+          e('p', { key: view, className: 'slow-typist text-[10px] text-slate-400 font-bold uppercase tracking-tighter', 'data-text': isForgot ? 'Initiate a sequence reset for your identifier.' : (isLogin ? 'Enter credentials to manage hatchery.' : 'Start journey in the stock market.') })
+        ),
+        feedback.type !== 'none' && e('div', { className: 'rounded-xl p-4 border-2 flex items-center gap-4 transition-all duration-500 ' + (feedback.type === 'error' ? 'bg-brand-red/10 border-brand-red/40 text-brand-red' : 'bg-brand-green/10 border-brand-green/40 text-brand-green') },
+          e('div', { className: 'h-2 w-2 rounded-full animate-pulse ' + (feedback.type === 'error' ? 'bg-brand-red' : 'bg-brand-green') }),
+          e('span', { className: 'text-[8px] font-bold uppercase tracking-[0.2em] flex-1' }, feedback.message)
+        ),
+        e('form', { onSubmit: handleSubmit, className: 'flex flex-col gap-5' },
+          e('div', { className: 'flex flex-col gap-2' },
+            e('label', { className: 'text-[8px] uppercase tracking-widest text-slate-500 ml-1 font-bold' }, 'Grid Identifier'),
+            e('input', { type: 'email', placeholder: 'name@hatchery.com', className: 'bg-slate-900/50 border-2 border-white/10 rounded-xl px-4 py-3 text-white focus:border-brand-yellow/50 focus:outline-none transition-colors placeholder:text-slate-600 text-[10px] font-mono', value: email, onChange: ev => setEmail(ev.target.value), required: true })
+          ),
+          !isForgot && e('div', { className: 'flex flex-col gap-2' },
+            e('div', { className: 'flex justify-between items-center' },
+              e('label', { className: 'text-[8px] uppercase tracking-widest text-slate-500 ml-1 font-bold' }, 'Access Sequence'),
+              isLogin && e('button', { type: 'button', onClick: () => switchView('forgot'), className: 'text-[8px] uppercase tracking-widest text-brand-yellow/60 hover:text-brand-yellow transition-colors font-bold' }, 'Forgot?')
+            ),
+            e('input', { type: 'password', placeholder: '••••••••', className: 'bg-slate-900/50 border-2 border-white/10 rounded-xl px-4 py-3 text-white focus:border-brand-yellow/50 focus:outline-none transition-colors placeholder:text-slate-600 text-[10px] font-mono', value: password, onChange: ev => setPassword(ev.target.value), required: true }),
+            !isLogin && e('div', { className: 'mt-1' },
+              e('div', { className: 'flex justify-between items-center mb-2' },
+                e('span', { className: 'text-[8px] uppercase tracking-widest text-slate-500 font-bold' }, 'Strength'),
+                e('span', { className: 'text-[8px] font-bold ' + (complexity < 40 ? 'text-brand-red' : complexity < 80 ? 'text-brand-yellow' : 'text-brand-green') }, complexity < 40 ? 'VULNERABLE' : complexity < 80 ? 'STABLE' : 'SECURE')
+              ),
+              e('div', { className: 'h-1 w-full bg-white/5 rounded-full overflow-hidden' },
+                e('div', { className: 'h-full transition-all duration-700 ' + (complexity < 40 ? 'bg-brand-red' : complexity < 80 ? 'bg-brand-yellow' : 'bg-brand-green'), style: { width: complexity + '%' } })
+              )
+            )
+          ),
+          isSignup && e('div', { className: 'flex flex-col gap-2' },
+            e('label', { className: 'text-[8px] uppercase tracking-widest text-slate-500 ml-1 font-bold' }, 'Verify Sequence'),
+            e('input', { type: 'password', placeholder: '••••••••', className: 'bg-slate-900/50 border-2 rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder:text-slate-600 text-[10px] font-mono ' + (password && confirmPassword ? (password === confirmPassword ? 'border-brand-green/40' : 'border-brand-red/40') : 'border-white/10'), value: confirmPassword, onChange: ev => setConfirmPassword(ev.target.value), required: true })
+          ),
+          e('button', { type: 'submit', disabled: loading, className: 'major-btn mt-4 py-4 rounded-xl font-bold text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-3 ' + (loading ? 'opacity-50 cursor-not-allowed' : '') + ' ' + (isForgot ? 'bg-brand-red text-white' : isLogin ? 'bg-brand-yellow text-slate-950' : 'bg-brand-green text-slate-950') },
+            loading ? e('div', { className: 'h-4 w-4 border-2 border-current/30 border-t-current animate-spin rounded-full' }) : (isForgot ? 'Initialize Reset' : isLogin ? 'Initialize' : 'Register')
+          )
+        ),
+        !isForgot && e('div', { className: 'relative my-2' },
+          e('div', { className: 'absolute inset-0 flex items-center' }, e('div', { className: 'w-full border-t border-white/10' })),
+          e('div', { className: 'relative flex justify-center text-[8px] uppercase' }, e('span', { className: 'bg-[#090e22] px-3 text-slate-500 tracking-widest font-bold' }, 'Sync With'))
+        ),
+        !isForgot && e('div', { className: 'grid grid-cols-2 gap-4' },
+          e('button', { onClick: () => handleSocialLogin('Google'), className: 'flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 bg-white/5 text-[8px] text-slate-300 hover:bg-white/10 transition-colors font-bold' },
+            e('svg', { width: '16', height: '16', viewBox: '0 0 24 24' },
+              e('path', { fill: '#4285F4', d: 'M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z' }),
+              e('path', { fill: '#34A853', d: 'M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z' }),
+              e('path', { fill: '#FBBC05', d: 'M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z' }),
+              e('path', { fill: '#EA4335', d: 'M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z' })
+            ),
+            'Google'
+          ),
+          e('button', { onClick: () => handleSocialLogin('GitHub'), className: 'flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 bg-white/5 text-[8px] text-slate-300 hover:bg-white/10 transition-colors font-bold' },
+            e('svg', { width: '16', height: '16', viewBox: '0 0 24 24', fill: 'currentColor' }, e('path', { d: 'M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12' })),
+            'GitHub'
+          )
+        ),
+        e('div', { className: 'text-center mt-2' },
+          isForgot ?
+            e('button', { onClick: () => switchView('login'), className: 'text-[8px] text-slate-400 hover:text-white transition-colors underline decoration-white/20 underline-offset-4 font-bold uppercase' }, 'Back to Terminal') :
+            e('button', { onClick: () => switchView(isLogin ? 'signup' : 'login'), className: 'text-[8px] text-slate-400 hover:text-white transition-colors underline decoration-white/20 underline-offset-4 font-bold uppercase' },
+              isLogin ? "No ID? Register here" : "Have ID? Login here"
+            )
+        )
+      )
+    );
+  };
+
+  const authRoot = ReactDOM.createRoot(document.getElementById('react-auth-root'));
+  authRoot.render(e(AuthPage));
+  const marketRoot = ReactDOM.createRoot(document.getElementById('react-market-root'));
+  marketRoot.render(e(StockMarketUI));
+
+  /* ═══════════════════════════════════════════════
+     UTILS
+  ═══════════════════════════════════════════════ */
+  function randomBetween(min, max) { return min + Math.random() * (max - min); }
+
+  const coins = [];
+  let lastShipSpawn = performance.now();
+  let nextShootingStar = performance.now() + randomBetween(11500, 19000);
+  let shipActive = false;
+
+  const MOON_BASE_LX = 6, MOON_BASE_LY = 5, MOON_BASE_RX = 10, MOON_BASE_RY = 5;
+  const SUN_BASE_LX  = 8, SUN_BASE_LY  = 8, SUN_BASE_RX  = 12, SUN_BASE_RY  = 8;
+  let curMoonLx = MOON_BASE_LX, curMoonLy = MOON_BASE_LY;
+  let curMoonRx = MOON_BASE_RX, curMoonRy = MOON_BASE_RY;
+  let curSunLx  = SUN_BASE_LX,  curSunLy  = SUN_BASE_LY;
+  let curSunRx  = SUN_BASE_RX,  curSunRy  = SUN_BASE_RY;
+  const PUPIL_SMOOTH = 0.14;
+
+  (function setupCelestialMood() {
+    const bodies = [
+      { el: document.getElementById('moon'), smile: null, shock: null },
+      { el: document.getElementById('sun'),  smile: null, shock: null }
+    ];
+    bodies.forEach(b => {
+      if (!b.el) return;
+      b.smile = b.el.querySelector('.mouth-smile');
+      b.shock = b.el.querySelector('.mouth-shock');
+    });
+    function setMood(b, type) {
+      if (!b.smile || !b.shock) return;
+      if (type === 'smile') { b.smile.setAttribute('visibility','visible'); b.shock.setAttribute('visibility','hidden'); }
+      else { b.smile.setAttribute('visibility','hidden'); b.shock.setAttribute('visibility','visible'); }
+    }
+    function scheduleNext() {
+      setTimeout(() => {
+        const mood = Math.random() < 0.35 ? 'shock' : 'smile';
+        bodies.forEach(b => setMood(b, mood));
+        if (mood === 'shock') setTimeout(() => bodies.forEach(b => setMood(b, 'smile')), 700 + Math.random() * 900);
+        scheduleNext();
+      }, 1200 + Math.random() * 4200);
+    }
+    bodies.forEach(b => setMood(b, 'smile'));
+    scheduleNext();
+  }());
+
+  function spawnShip() {
+    const baseY = randomBetween(112, Math.min(180, window.innerHeight * 0.42));
+    spaceship.style.top = `${baseY}px`;
+    spaceship.dataset.x = `${randomBetween(-180, -100)}`;
+    spaceship.dataset.speed = `${randomBetween(180, 220)}`;
+    spaceship.dataset.phase = '0';
+    spaceship.dataset.baseY = `${baseY}`;
+    spaceship.style.transform = `translateX(${spaceship.dataset.x}px) rotate(0deg)`;
+    spaceship.style.opacity = '1';
+    shipActive = true;
+  }
+
+  function spawnCoin(startX, startY) {
+    const coin = document.createElement('div');
+    coin.className = 'coin';
+    const x = typeof startX !== 'undefined' ? startX : window.innerWidth + randomBetween(120, 260);
+    const y = typeof startY !== 'undefined' ? startY : randomBetween(104, 152);
+    coin.dataset.x = `${x}`; coin.dataset.speed = '200';
+    coin.dataset.expireAt = `${performance.now() + 12000}`;
+    coin.style.left = `${x}px`; coin.style.top = `${y}px`;
+    coinLayer.appendChild(coin); coins.push(coin);
+  }
+
+  function spawnCoinBatch() {
+    const baseY = randomBetween(116, 140);
+    [130,210,290,370].forEach((offset, i) => spawnCoin(window.innerWidth + offset, baseY + (i - 1.5) * randomBetween(-8, 8)));
+  }
+
+  function updateCoins() {
+    const now = performance.now();
+    for (let i = coins.length - 1; i >= 0; i--) {
+      const coin = coins[i];
+      const x = parseFloat(coin.dataset.x) - parseFloat(coin.dataset.speed) * 0.016;
+      coin.dataset.x = x; coin.style.left = `${x}px`;
+      if (x < -60) { coin.remove(); coins.splice(i, 1); continue; }
+      if (now > parseFloat(coin.dataset.expireAt) && !shipActive) { coin.remove(); coins.splice(i, 1); }
+    }
+  }
+
+  function updateShip() {
+    if (!shipActive) return;
+    const speed = parseFloat(spaceship.dataset.speed);
+    const x     = parseFloat(spaceship.dataset.x) + speed * 0.016;
+    const phase = parseFloat(spaceship.dataset.phase) + 0.032;
+    const baseY = parseFloat(spaceship.dataset.baseY);
+    spaceship.dataset.x = x; spaceship.dataset.phase = phase;
+    const defaultY = baseY + Math.sin(phase * 1.2) * 18 + Math.sin(phase * 2.7) * 8;
+    const shipCenterX = x + 32;
+    let targetY = defaultY, closestDist = Infinity;
+    coins.forEach(coin => {
+      const coinX = parseFloat(coin.style.left) + 9, coinY = parseFloat(coin.style.top) + 9;
+      const dist = coinX - shipCenterX;
+      if (dist > 0 && dist < closestDist) { closestDist = dist; targetY = coinY - 4; }
+    });
+    const followOffset = Math.max(-20, Math.min(20, (targetY - defaultY) * 0.18));
+    const y = defaultY + followOffset;
+    spaceship.style.transform = `translateX(${x}px) rotate(${Math.sin(phase * 1.4) * 12 + followOffset * 0.8}deg)`;
+    spaceship.style.top = `${y}px`;
+    const shipCenterY = y + 14;
+    for (let i = coins.length - 1; i >= 0; i--) {
+      const coin = coins[i];
+      const cx = parseFloat(coin.style.left) + 9, cy = parseFloat(coin.style.top) + 9;
+      const dx = shipCenterX - cx, dy = shipCenterY - cy;
+      if (cx < shipCenterX - 24 || Math.sqrt(dx*dx + dy*dy) < 30) { coin.remove(); coins.splice(i, 1); }
+    }
+    if (x > window.innerWidth + 260) { shipActive = false; spaceship.style.opacity = '0'; }
+  }
+
+  function maybeSpawnShootingStar(now) {
+    if (now >= nextShootingStar) { spawnShootingStar(); nextShootingStar = now + randomBetween(12000, 22000); }
+  }
+  function spawnShootingStar() {
+    if (!shootingStarLayer) return;
+    const star = document.createElement('div');
+    star.className = 'shooting-star';
+    star.style.left = `${randomBetween(-260, window.innerWidth * 0.05)}px`;
+    star.style.top  = `${randomBetween(24, window.innerHeight * 0.18)}px`;
+    star.style.setProperty('--star-angle', `${randomBetween(-12, 8)}deg`);
+    shootingStarLayer.appendChild(star);
+    star.addEventListener('animationend', () => star.remove());
+  }
+
+  function updateCelestialEyes() {
+    const moonBody = document.getElementById('moon');
+    if (moonBody && parseFloat(getComputedStyle(moonBody).opacity) > 0.05) {
+      try {
+        const svg = moonBody.querySelector('svg');
+        const pupilL = moonBody.querySelector('.pupil-l');
+        const pupilR = moonBody.querySelector('.pupil-r');
+        const rect = moonBody.getBoundingClientRect();
+        const mx = rect.left + rect.width / 2, my = rect.top + rect.height / 2;
+        let ex = 0, ey = 0;
+        if (shipActive) {
+          const sx = parseFloat(spaceship.dataset.x) + 32;
+          const sy = parseFloat(spaceship.style.top) + 14;
+          const scale = svg ? svg.clientWidth / (svg.viewBox.baseVal.width || 17) : 1;
+          ex = Math.max(-24, Math.min(24, (sx - mx) * 0.08)); ey = Math.max(-24, Math.min(24, (sy - my) * 0.08));
+          ex /= scale; ey /= scale;
+        }
+        curMoonLx += (MOON_BASE_LX + ex - curMoonLx) * PUPIL_SMOOTH;
+        curMoonLy += (MOON_BASE_LY + ey - curMoonLy) * PUPIL_SMOOTH;
+        curMoonRx += (MOON_BASE_RX + ex - curMoonRx) * PUPIL_SMOOTH;
+        curMoonRy += (MOON_BASE_RY + ey - curMoonRy) * PUPIL_SMOOTH;
+        if (pupilL) { pupilL.setAttribute('x', curMoonLx.toFixed(2)); pupilL.setAttribute('y', curMoonLy.toFixed(2)); }
+        if (pupilR) { pupilR.setAttribute('x', curMoonRx.toFixed(2)); pupilR.setAttribute('y', curMoonRy.toFixed(2)); }
+      } catch(err) {}
+    }
+    const sunBody = document.getElementById('sun');
+    if (sunBody && parseFloat(getComputedStyle(sunBody).opacity) > 0.05) {
+      try {
+        const pupilL = sunBody.querySelector('.pupil-l');
+        const pupilR = sunBody.querySelector('.pupil-r');
+        const rect = sunBody.getBoundingClientRect();
+        const mx = rect.left + rect.width / 2, my = rect.top + rect.height / 2;
+        let ex = 0, ey = 0;
+        if (shipActive) {
+          const sx = parseFloat(spaceship.dataset.x) + 32, sy = parseFloat(spaceship.style.top) + 14;
+          ex = Math.max(-1.5, Math.min(1.5, (sx - mx) * 0.006));
+          ey = Math.max(-1.5, Math.min(1.5, (sy - my) * 0.006));
+        }
+        curSunLx += (SUN_BASE_LX + ex - curSunLx) * PUPIL_SMOOTH;
+        curSunLy += (SUN_BASE_LY + ey - curSunLy) * PUPIL_SMOOTH;
+        curSunRx += (SUN_BASE_RX + ex - curSunRx) * PUPIL_SMOOTH;
+        curSunRy += (SUN_BASE_RY + ey - curSunRy) * PUPIL_SMOOTH;
+        if (pupilL) { pupilL.setAttribute('x', curSunLx.toFixed(2)); pupilL.setAttribute('y', curSunLy.toFixed(2)); }
+        if (pupilR) { pupilR.setAttribute('x', curSunRx.toFixed(2)); pupilR.setAttribute('y', curSunRy.toFixed(2)); }
+      } catch(err) {}
+    }
+  }
+
+  function updateParallax(event) {
+    if (!event || typeof event.clientX !== 'number') return;
+    const x = (event.clientX / window.innerWidth - 0.5) * 12;
+    const y = (event.clientY / window.innerHeight - 0.5) * 10;
+    if (gameBg) gameBg.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    [moonEl, sunEl].forEach(body => {
+      if (!body) return;
+      if (parseFloat(getComputedStyle(body).opacity) < 0.1) return;
+      if (!isDayMode && body === moonEl) {
+        body.style.transform = `translate3d(${x * 1.2}px, ${y * 1.1}px, 0) rotate(${x * 0.8}deg)`;
+      } else if (isDayMode && body === sunEl) {
+        body.style.transform = `translate3d(${x * 1.2}px, ${y * 1.1}px, 0) rotate(${x * 0.8}deg)`;
+      }
+    });
+  }
+  window.addEventListener('mousemove', updateParallax);
+
+  let cursorTargetX = window.innerWidth / 2, cursorTargetY = window.innerHeight / 2;
+  let cursorCurrentX = cursorTargetX, cursorCurrentY = cursorTargetY;
+  const CURSOR_LERP = 0.08;
+  window.addEventListener('mousemove', ev => { 
+    cursorTargetX = ev.clientX; 
+    cursorTargetY = ev.clientY; 
+    if (pixelCursor) pixelCursor.style.opacity = '1';
+  }, { passive: true });
+  function updatePixelCursor() {
+    cursorCurrentX += (cursorTargetX - cursorCurrentX) * CURSOR_LERP;
+    cursorCurrentY += (cursorTargetY - cursorCurrentY) * CURSOR_LERP;
+    if (pixelCursor) pixelCursor.style.transform = `translate3d(${cursorCurrentX}px, ${cursorCurrentY}px, 0) translate(-50%, -50%)`;
+    requestAnimationFrame(updatePixelCursor);
+  }
+  updatePixelCursor();
+
+  window.addEventListener('click', () => {
+    if (!cursorReady || !pixelCursor || !pixelCursorImg) return;
+    cursorReady = false;
+    pixelCursor.classList.add('cracking');
+    pixelCursorImg.src = crackedCursorSrc;
+    setTimeout(() => { pixelCursor.classList.remove('cracking'); pixelCursorImg.src = normalCursorSrc; cursorReady = true; }, 200);
+  });
+
+  let smoothScrollTarget = window.scrollY, smoothScrollCurrent = window.scrollY, smoothScrollActive = false;
+  const smoothScrollEase = 0.12, smoothScrollMultiplier = 0.85;
+  function clampScroll(v) { return Math.max(0, Math.min(v, document.documentElement.scrollHeight - window.innerHeight)); }
+  const footerBar = document.getElementById('site-footer-bar');
+
+  let lastKnownScrollY = 0;
+  const headerEl = document.querySelector('header');
+  const treeLayer = document.getElementById('tree-layer');
+
+  function updateScrollUI() {
+    const pos = smoothScrollActive ? smoothScrollCurrent : window.scrollY;
+    const activePage = pages.find(p => sectionMap[p] && !sectionMap[p].classList.contains('hidden'));
+    
+    const scrollingDown = pos > lastKnownScrollY + 2;
+    const scrollingUp   = pos < lastKnownScrollY - 2;
+    if (pos < 20) {
+      headerEl && headerEl.classList.remove('scrolled-away');
+    } else if (scrollingDown && pos > 60) {
+      headerEl && headerEl.classList.add('scrolled-away');
+    } else if (scrollingUp) {
+      headerEl && headerEl.classList.remove('scrolled-away');
+    }
+    lastKnownScrollY = pos;
+  }
+
+  function smoothScrollFrame() {
+    smoothScrollCurrent += (smoothScrollTarget - smoothScrollCurrent) * smoothScrollEase;
+    if (Math.abs(smoothScrollTarget - smoothScrollCurrent) < 0.5) smoothScrollCurrent = smoothScrollTarget;
+    window.scrollTo(0, smoothScrollCurrent);
+    updateScrollUI();
+    if (Math.abs(smoothScrollTarget - smoothScrollCurrent) > 0.5) requestAnimationFrame(smoothScrollFrame);
+    else smoothScrollActive = false;
+  }
+  window.addEventListener('wheel', ev => {
+    ev.preventDefault();
+    smoothScrollTarget = clampScroll(smoothScrollTarget + ev.deltaY * smoothScrollMultiplier);
+    updateScrollUI();
+    if (!smoothScrollActive) { smoothScrollActive = true; requestAnimationFrame(smoothScrollFrame); }
+  }, { passive: false });
+  window.addEventListener('resize', () => { smoothScrollTarget = clampScroll(window.scrollY); smoothScrollCurrent = smoothScrollTarget; updateScrollUI(); });
+  window.addEventListener('scroll', () => { if (!smoothScrollActive) { smoothScrollTarget = window.scrollY; smoothScrollCurrent = smoothScrollTarget; } updateScrollUI(); });
+
+  /* ═══════════════════════════════════════════════
+     ENVIRONMENT (trees, eggs, breeze)
+  ═══════════════════════════════════════════════ */
+  const eggLayer  = document.getElementById('egg-layer');
+  const activeTrees = [];
+  const activeEggs  = [];
+
+  const treeSvg = `<svg viewBox="0 0 16 32" shape-rendering="crispEdges" style="width:100%;height:100%;">
+    <rect x="7" y="28" width="2" height="4" fill="#452711"/>
+    <rect x="2" y="22" width="12" height="6" fill="#064e3b"/>
+    <rect x="3" y="21" width="10" height="1" fill="#064e3b"/>
+    <rect x="4" y="15" width="8" height="6" fill="#065f46"/>
+    <rect x="5" y="14" width="6" height="1" fill="#065f46"/>
+    <rect x="6" y="8" width="4" height="6" fill="#059669"/>
+    <rect x="7" y="6" width="2" height="2" fill="#059669"/>
+    <rect x="7" y="4" width="2" height="2" fill="#10b981"/>
+  </svg>`;
+
+  const fallingEggSvg = `<svg viewBox="0 0 12 16" shape-rendering="crispEdges">
+    <rect x="4" y="0" width="4" height="1" fill="#ffffff"/>
+    <rect x="2" y="1" width="8" height="2" fill="#ffffff"/>
+    <rect x="1" y="3" width="10" height="10" fill="#ffffff"/>
+    <rect x="2" y="13" width="8" height="2" fill="#ffffff"/>
+    <rect x="4" y="15" width="4" height="1" fill="#ffffff"/>
+    <rect x="3" y="3" width="2" height="2" fill="#f1f5f9"/>
+  </svg>`;
+  const crackedEggSvg = `<svg viewBox="0 0 16 16" shape-rendering="crispEdges">
+    <rect x="2" y="10" width="12" height="4" fill="#ffffff"/>
+    <rect x="4" y="8" width="8" height="2" fill="#ffffff"/>
+    <rect x="1" y="12" width="14" height="2" fill="#ffffff"/>
+    <rect x="6" y="10" width="4" height="2" fill="#facc15"/>
+    <rect x="7" y="9" width="2" height="1" fill="#facc15"/>
+  </svg>`;
+
+  function getGroundY() { return window.innerHeight - 52; }
+
+  function spawnTree(x) {
+    const tree = document.createElement('div');
+    tree.className = 'pixel-tree';
+    tree.innerHTML = treeSvg;
+    tree.dataset.x = x;
+    tree.dataset.speed = (1.0 + Math.random() * 0.6).toFixed(3);
+    const y = getGroundY() - 128;
+    tree.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    treeLayer.appendChild(tree);
+    requestAnimationFrame(() => tree.classList.add('visible'));
+    activeTrees.push(tree);
+  }
+
+  function initEnvironment() {
+    const minDist = 160;
+    const count = 14 + Math.floor(Math.random() * 6);
+    const positions = [];
+    for (let i = 0; i < count; i++) {
+      let attempts = 0, x = null;
+      while (attempts < 60) {
+        const candidate = Math.random() * (window.innerWidth + 400) - 200;
+        if (!positions.some(p => Math.abs(p - candidate) < minDist)) { x = candidate; break; }
+        attempts++;
+      }
+      if (x !== null) { positions.push(x); spawnTree(x); }
+    }
+  }
+
+  function spawnBreeze() {
+    const breeze = document.createElement('div');
+    breeze.className = 'breeze-particle';
+    const y = getGroundY() - randomBetween(20, 160);
+    breeze.style.left = '-100px';
+    breeze.style.top  = y + 'px';
+    breeze.style.width = (30 + Math.random() * 60) + 'px';
+    breeze.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+    treeLayer.appendChild(breeze);
+    breeze.addEventListener('animationend', () => breeze.remove());
+  }
+
+  function updateEnvironment() {
+    const groundY = getGroundY();
+    const screenW = window.innerWidth;
+    const y = groundY - 128;
+
+    activeTrees.forEach(tree => {
+      const speed = parseFloat(tree.dataset.speed);
+      let x = parseFloat(tree.dataset.x) - speed;
+      if (x < -90) {
+        x = screenW + randomBetween(80, 500);
+        let attempts = 0;
+        while (attempts < 20 && activeTrees.some(t => t !== tree && Math.abs(parseFloat(t.dataset.x) - x) < 120)) {
+          x += 120; attempts++;
+        }
+      }
+      tree.dataset.x = x;
+      tree.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    });
+
+    if (Math.random() < 0.04) spawnBreeze();
+  }
+
+  function spawnFallingEgg() {
+    const egg = document.createElement('div');
+    egg.className = 'falling-egg';
+    egg.innerHTML = fallingEggSvg;
+    const x = Math.random() * (window.innerWidth - 60) + 30;
+    const y = 80;
+    egg.style.left = x + 'px'; egg.style.top = y + 'px';
+    eggLayer.appendChild(egg);
+    activeEggs.push({ el: egg, x, y, vy: 0, gravity: 0.15 + Math.random() * 0.1, splatted: false });
+  }
+
+  function updateEggs() {
+    const groundY = getGroundY();
+    for (let i = activeEggs.length - 1; i >= 0; i--) {
+      const egg = activeEggs[i];
+      if (egg.splatted) continue;
+      egg.vy += egg.gravity; egg.y += egg.vy;
+      let collided = false, landingY = groundY;
+      for (const tree of activeTrees) {
+        const treeX = parseFloat(tree.dataset.x), treeY = groundY - 128;
+        const eggCX = egg.x + 16;
+        if (eggCX > treeX && eggCX < treeX + 64) {
+          const dist = Math.abs(eggCX - (treeX + 32));
+          if (dist < 12) landingY = treeY + 16;
+          else if (dist < 28) landingY = treeY + 60;
+          else landingY = treeY + 95;
+          if (egg.y + 32 >= landingY) { collided = true; egg.y = landingY - 32; break; }
+        }
+      }
+      if (!collided && egg.y + 32 >= groundY) { collided = true; egg.y = groundY - 32; }
+      if (collided) {
+        egg.splatted = true;
+        egg.el.style.top = egg.y + 'px';
+        egg.el.innerHTML = crackedEggSvg;
+        egg.el.classList.add('egg-splat');
+        setTimeout(() => { egg.el.remove(); const idx = activeEggs.indexOf(egg); if (idx > -1) activeEggs.splice(idx, 1); }, 2000);
+      } else {
+        egg.el.style.top = egg.y + 'px';
+      }
+    }
+  }
+
+  initEnvironment();
+  spawnCoinBatch();
+
+  requestAnimationFrame(function animateFrame() {
+    const now = performance.now();
+    if (!shipActive && coins.length === 0 && now - lastShipSpawn > 3000 && Math.random() < 0.2) spawnCoinBatch();
+    if (now - lastShipSpawn > 7500 && !shipActive) { spawnShip(); lastShipSpawn = now; }
+    if (Math.random() < 0.003) spawnFallingEgg();
+    maybeSpawnShootingStar(now);
+    updateShip(); updateCoins(); updateEnvironment(); updateEggs(); updateCelestialEyes();
+    requestAnimationFrame(animateFrame);
+  });
+
+  setupFadeReveal();
+  updateScrollUI();
+  setPage('home');
+  runHeaderTypewriter();
+  </script>
+</body>
+</html>

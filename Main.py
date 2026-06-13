@@ -1,3 +1,3 @@
 print("chicken")
 print("chicken")
-PRINT("CHICKEN")
+print("CHICKEN")
