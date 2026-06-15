@@ -806,6 +806,12 @@
       border-color: rgba(250, 204, 21, 0.35);
       box-shadow: 20px 0 80px rgba(0, 0, 0, 0.7), 5px 0 30px rgba(250, 204, 21, 0.15);
     }
+
+    /* Blog Transitions */
+    .blog-view-enter { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+    .blog-view-active { opacity: 1; transform: translateY(0); filter: blur(0); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .blog-view-exit { opacity: 0; transform: translateY(-20px); filter: blur(4px); transition: all 0.4s ease-in; }
+
     .sidebar-item {
       display: flex;
       align-items: center;
@@ -1160,22 +1166,7 @@
       </section>
 
       <section id="blog" class="page-section hidden rounded-[40px] retro-panel p-8 shadow-neon">
-        <div class="flex flex-col gap-6">
-          <div class="top-box rounded-[24px] border-2 border-brand-red/20 bg-brand-red/5 p-6 border-dashed">
-            <div class="flex items-center gap-4 mb-4">
-              <div class="px-2 py-1 bg-brand-red text-[9px] text-white font-bold rounded animate-bounce">LIVE FEED</div>
-              <span class="text-[10px] uppercase tracking-[0.3em] text-brand-red font-bold">Hatchery Chronicles</span>
-            </div>
-            <p class="slow-typist text-sm leading-relaxed text-slate-200" data-text="BREAKING: NEW STOCK OPPORTUNITY DISCOVERED IN SECTOR 7. MARKET VOLATILITY INCREASING. STAY TUNED FOR FRESH SHELL UPDATES."></p>
-          </div>
-          <div class="inline-flex items-center gap-3 rounded-full bg-brand-red/10 px-4 py-2 text-sm font-semibold text-brand-red">Blog</div>
-          <h2 class="text-3xl font-semibold text-white">The Daily Fry: Reports from the Market Pan.</h2>
-          <p class="max-w-3xl text-slate-300">Stay informed with the latest insights from our roosters on the ground. We track every crack in the market so you don't have to.</p>
-          <div class="grid gap-6 sm:grid-cols-2">
-            <div class="console-card"><div class="console-header"><div class="console-title">SIGNAL</div><div class="status-line status-green"><span class="status-dot"></span>LIVE</div></div><h3 class="font-semibold text-white">Daily Cracks</h3><p class="mt-3 text-slate-400">Our quantitative team breaks down market volatility with surgical precision.</p></div>
-            <div class="console-card"><div class="console-header"><div class="console-title">AUDIO</div><div class="status-line status-green"><span class="status-dot"></span>OK</div></div><h3 class="font-semibold text-white">Rooster Reports</h3><p class="mt-3 text-slate-400">High-priority updates from the ground floor of the global hatchery.</p></div>
-          </div>
-        </div>
+        <div id="react-blog-system-root"></div>
       </section>
 
       <section id="auth" class="page-section hidden rounded-[40px] retro-panel p-8 shadow-neon">
@@ -1497,18 +1488,36 @@
   const logEntries     = ["Scanning for market fractures...", "Inspecting shell integrity...", "Boiling data buffers...", "Aligning institutional whites...", "Seasoning prediction models...", "Waking up the roosters..."];
 
   function updateEggDropdown() {
-    const isLoggedIn = !!localStorage.getItem('eggmash_current_user');
+    const storedUser = localStorage.getItem('eggmash_current_user');
+    const isLoggedIn = !!storedUser;
+    const plan = storedUser === 'eggmash500@gmail.com' ? 'Omelet' : (localStorage.getItem('eggmash_current_plan') || 'Shell');
+    
+    if (storedUser === 'eggmash500@gmail.com') {
+      localStorage.setItem('eggmash_current_plan', 'Omelet');
+    }
+
     if (!eggLoginBtn || !eggSignupBtn || !eggAccountBtn || !eggSignoutBtn) return;
     if (isLoggedIn) {
       eggLoginBtn.style.display = 'none';
       eggSignupBtn.style.display = 'none';
       eggAccountBtn.style.display = 'block';
       eggSignoutBtn.style.display = 'block';
+      
+      // Update header badge
+      const badge = document.getElementById('header-plan-badge');
+      const text = document.getElementById('header-plan-text');
+      if (badge && text) {
+        badge.style.display = 'flex';
+        text.textContent = plan + ' Account';
+        if (plan === 'Omelet') text.style.color = '#22c55e';
+      }
     } else {
       eggLoginBtn.style.display = 'block';
       eggSignupBtn.style.display = 'block';
       eggAccountBtn.style.display = 'none';
       eggSignoutBtn.style.display = 'none';
+      const badge = document.getElementById('header-plan-badge');
+      if (badge) badge.style.display = 'none';
     }
   }
 
@@ -1767,6 +1776,320 @@
   ═══════════════════════════════════════════════ */
   const { useState, useEffect, useMemo, useRef } = React;
   const e = React.createElement;
+
+  // ── PROXY FETCH: tries two CORS proxies (GLOBAL) ───────────
+  const proxyFetch = async (url) => {
+    const proxies = [
+      `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&t=${Date.now()}`,
+    ];
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy, {signal: AbortSignal.timeout(9000)});
+        if (!res.ok) continue;
+        const text = await res.text();
+        if (proxy.includes('allorigins')) {
+          const j = JSON.parse(text);
+          return j.contents;
+        }
+        return text;
+      } catch { continue; }
+    }
+    throw new Error('All proxies failed');
+  };
+
+  // ── BLOG NEWS TICKER COMPONENT (Summarized Internal Articles) ──────────
+  const BlogNewsTicker = () => {
+    const [summary, setSummary] = useState('INITIALIZING HATCHERY CHRONICLES...');
+    const [isTyping, setIsTyping] = useState(false);
+
+    useEffect(() => {
+      const updateFeed = () => {
+        const articles = JSON.parse(localStorage.getItem('eggmash_articles') || '[]');
+        if (articles.length === 0) {
+          setSummary('NO RECENT ARTICLES. HATCHERY IS SILENT.');
+          return;
+        }
+        
+        // Pick a random article or cycle
+        const art = articles[Math.floor(Math.random() * articles.length)];
+        const headline = `SUMMARY: ${art.title.toUpperCase()} - ${art.summary.toUpperCase()}`;
+        
+        setIsTyping(true);
+        let i = 0;
+        const type = () => {
+          if (i <= headline.length) {
+            setSummary(headline.slice(0, i));
+            i++;
+            setTimeout(type, 25);
+          } else {
+            setIsTyping(false);
+          }
+        };
+        type();
+      };
+
+      updateFeed();
+      const interval = setInterval(updateFeed, 12000);
+      return () => clearInterval(interval);
+    }, []);
+
+    return e('p', { 
+      className: `text-sm leading-relaxed text-slate-200` 
+    }, 
+      summary,
+      e('span', { className: 'inline-block w-2 h-4 ml-1 bg-brand-red animate-pulse align-middle' })
+    );
+  };
+
+  // ── RICH TEXT EDITOR COMPONENT ──────────────────────────────
+  const ArticleEditor = ({ onSave, onCancel, isAdmin }) => {
+    const [title, setTitle] = useState('');
+    const [summary, setSummary] = useState('');
+    const [content, setContent] = useState('');
+    const editorRef = useRef(null);
+
+    const format = (cmd, val = null) => {
+      document.execCommand(cmd, false, val);
+      editorRef.current.focus();
+    };
+
+    const handleSave = () => {
+      if (!title || !content) return;
+      onSave({
+        id: Date.now(),
+        title,
+        summary: summary || content.slice(0, 100).replace(/<[^>]*>/g, '') + '...',
+        content: editorRef.current.innerHTML,
+        author: localStorage.getItem('eggmash_current_user') || 'Anonymous',
+        date: new Date().toLocaleDateString(),
+        status: isAdmin ? 'approved' : 'pending'
+      });
+    };
+
+    return e('div', { className: 'flex flex-col gap-6 animate-slide-up' },
+      e('div', { className: 'flex flex-col gap-2' },
+        e('label', { className: 'text-[9px] uppercase tracking-widest text-slate-500 font-bold' }, 'Article Title'),
+        e('input', { 
+          className: 'bg-slate-900/50 border-2 border-white/10 rounded-xl px-4 py-3 text-white focus:border-brand-red/50 outline-none text-sm font-bold',
+          value: title, onChange: ev => setTitle(ev.target.value), placeholder: 'Enter a bold headline...'
+        })
+      ),
+      e('div', { className: 'flex flex-col gap-2' },
+        e('label', { className: 'text-[9px] uppercase tracking-widest text-slate-500 font-bold' }, 'Short Summary'),
+        e('textarea', { 
+          className: 'bg-slate-900/50 border-2 border-white/10 rounded-xl px-4 py-2 text-white focus:border-brand-red/50 outline-none text-xs h-16 resize-none',
+          value: summary, onChange: ev => setSummary(ev.target.value), placeholder: 'Briefly summarize the yolk...'
+        })
+      ),
+      e('div', { className: 'flex flex-col gap-2' },
+        e('label', { className: 'text-[9px] uppercase tracking-widest text-slate-500 font-bold' }, 'Content Body'),
+        // Toolbar
+        e('div', { className: 'flex flex-wrap gap-2 p-2 bg-white/5 border-2 border-white/10 rounded-t-xl border-b-0' },
+          ['bold', 'italic', 'underline'].map(cmd => 
+            e('button', { key: cmd, onClick: () => format(cmd), className: 'px-3 py-1 rounded bg-white/5 hover:bg-white/10 text-[10px] uppercase font-bold text-slate-300' }, cmd)
+          ),
+          e('button', { onClick: () => {
+            const url = prompt('Enter image URL:');
+            if(url) format('insertImage', url);
+          }, className: 'px-3 py-1 rounded bg-white/5 hover:bg-white/10 text-[10px] uppercase font-bold text-slate-300' }, 'image'),
+          e('button', { onClick: () => {
+            const sym = prompt('Enter Ticker for Mini-Graph (e.g. BTC):');
+            if(sym) {
+              const graphHtml = `<div class="my-4 p-4 rounded-xl bg-slate-950 border border-brand-yellow/20 inline-block" contenteditable="false">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse"></div>
+                  <span class="text-[8px] font-black text-white uppercase">${sym} LIVE PROJECTION</span>
+                </div>
+                <svg width="120" height="40" viewBox="0 0 120 40">
+                  <path d="M0,30 Q30,10 60,25 T120,5" fill="none" stroke="#facc15" stroke-width="2" />
+                </svg>
+              </div>`;
+              format('insertHTML', graphHtml);
+            }
+          }, className: 'px-3 py-1 rounded bg-white/5 hover:bg-white/10 text-[10px] uppercase font-bold text-brand-yellow' }, 'graph')
+        ),
+        e('div', { 
+          ref: editorRef,
+          contentEditable: true,
+          className: 'bg-slate-900/50 border-2 border-white/10 rounded-b-xl px-4 py-4 text-white focus:border-brand-red/50 outline-none text-sm min-h-[300px] prose prose-invert max-w-none',
+          onInput: ev => setContent(ev.currentTarget.innerHTML)
+        })
+      ),
+      e('div', { className: 'flex gap-4' },
+        e('button', { onClick: handleSave, className: 'major-btn flex-1 py-4 bg-brand-red text-white text-[10px] font-black uppercase tracking-widest' }, isAdmin ? 'Publish Immediately' : 'Submit for Review'),
+        e('button', { onClick: onCancel, className: 'major-btn px-8 py-4 border-white/10 text-slate-400 text-[10px] font-black uppercase' }, 'Cancel')
+      )
+    );
+  };
+
+  // ── BLOG SYSTEM MAIN COMPONENT ──────────────────────────────
+  const BlogSystem = () => {
+    const [articles, setArticles] = useState([]);
+    const [drafts, setDrafts] = useState([]);
+    const [view, setView] = useState('list'); // 'list', 'create', 'view'
+    const [transitionClass, setTransitionClass] = useState('blog-view-active');
+    const [activeArticle, setActiveArticle] = useState(null);
+    const [user, setUser] = useState({ 
+      email: localStorage.getItem('eggmash_current_user'),
+      isAdmin: localStorage.getItem('eggmash_current_user') === 'EggMash500'
+    });
+
+    const switchBlogView = (newView, article = null) => {
+      setTransitionClass('blog-view-exit');
+      setTimeout(() => {
+        if (article) setActiveArticle(article);
+        setView(newView);
+        setTransitionClass('blog-view-enter');
+        requestAnimationFrame(() => {
+          setTimeout(() => setTransitionClass('blog-view-active'), 50);
+        });
+      }, 400);
+    };
+
+    const loadData = () => {
+      setArticles(JSON.parse(localStorage.getItem('eggmash_articles') || '[]'));
+      setDrafts(JSON.parse(localStorage.getItem('eggmash_drafts') || '[]'));
+    };
+
+    useEffect(() => {
+      loadData();
+      const handleUser = (e) => setUser({ email: e.detail.email, isAdmin: e.detail.isAdmin });
+      window.addEventListener('eggmash-user-changed', handleUser);
+      return () => window.removeEventListener('eggmash-user-changed', handleUser);
+    }, []);
+
+    const saveArticle = (art) => {
+      if (art.status === 'approved') {
+        const updated = [art, ...articles];
+        localStorage.setItem('eggmash_articles', JSON.stringify(updated));
+      } else {
+        const updated = [art, ...drafts];
+        localStorage.setItem('eggmash_drafts', JSON.stringify(updated));
+      }
+      loadData();
+      switchBlogView('list');
+    };
+
+    const approveDraft = (id) => {
+      const draft = drafts.find(d => d.id === id);
+      const remaining = drafts.filter(d => d.id !== id);
+      const approved = [{...draft, status: 'approved'}, ...articles];
+      localStorage.setItem('eggmash_drafts', JSON.stringify(remaining));
+      localStorage.setItem('eggmash_articles', JSON.stringify(approved));
+      loadData();
+    };
+
+    const deleteArticle = (id, isDraft = false) => {
+      const key = isDraft ? 'eggmash_drafts' : 'eggmash_articles';
+      const list = isDraft ? drafts : articles;
+      const updated = list.filter(a => a.id !== id);
+      localStorage.setItem(key, JSON.stringify(updated));
+      loadData();
+    };
+
+    return e('div', { className: `transition-all ${transitionClass}` },
+      (() => {
+        if (view === 'create') {
+          return e(ArticleEditor, { onSave: saveArticle, onCancel: () => switchBlogView('list'), isAdmin: user.isAdmin });
+        }
+
+        if (view === 'view' && activeArticle) {
+          return e('div', { className: 'flex flex-col gap-8' },
+            e('button', { 
+              onClick: () => switchBlogView('list'), 
+              className: 'major-btn w-fit px-6 py-2 border-brand-red/30 text-brand-red text-[10px] font-black uppercase hover:bg-brand-red/10 transition-all flex items-center gap-2 mb-4' 
+            }, e('span', { className: 'text-lg' }, '←'), 'Return to Feed'),
+            e('div', { className: 'flex flex-col gap-4' },
+              e('h2', { className: 'text-4xl font-black text-white leading-tight' }, activeArticle.title),
+              e('div', { className: 'flex items-center gap-4 text-[9px] uppercase tracking-widest text-brand-red font-bold' },
+                e('span', {}, `BY ${activeArticle.author}`),
+                e('div', { className: 'w-1 h-1 rounded-full bg-slate-800' }),
+                e('span', {}, activeArticle.date)
+              )
+            ),
+            e('div', { 
+              className: 'prose prose-invert max-w-none text-slate-300 leading-relaxed text-lg',
+              dangerouslySetInnerHTML: { __html: activeArticle.content }
+            })
+          );
+        }
+
+        return e('div', { className: 'flex flex-col gap-8' },
+          // Top Box Live Feed
+          e('div', { className: 'top-box rounded-[24px] border-2 border-brand-red/20 bg-brand-red/5 p-6 border-dashed relative overflow-hidden' },
+            e('div', { className: 'flex items-center gap-4 mb-4 relative z-10' },
+              e('div', { className: 'px-2 py-1 bg-brand-red text-[9px] text-white font-bold rounded animate-bounce shadow-neon' }, 'LIVE FEED'),
+              e('span', { className: 'text-[10px] uppercase tracking-[0.3em] text-brand-red font-bold' }, 'Hatchery Chronicles')
+            ),
+            e(BlogNewsTicker)
+          ),
+
+          // Actions Header
+          e('div', { className: 'flex items-center justify-between flex-wrap gap-4' },
+            e('div', { className: 'flex flex-col gap-2' },
+              e('div', { className: 'inline-flex items-center gap-3 rounded-full bg-brand-red/10 px-4 py-2 text-sm font-semibold text-brand-red w-fit' }, 'Hatchery Network'),
+              e('h2', { className: 'text-3xl font-semibold text-white' }, 'The Daily Fry')
+            ),
+            user.email && user.email !== 'guest' && e('button', { 
+              onClick: () => switchBlogView('create'),
+              className: 'major-btn px-6 py-3 bg-brand-red text-white text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 shadow-neon' 
+            }, 'Create Article')
+          ),
+
+          // Article List
+          e('div', { className: 'grid gap-6' },
+            articles.length === 0 ? e('div', { className: 'p-12 text-center border-2 border-dashed border-white/5 rounded-3xl' },
+              e('p', { className: 'text-slate-600 uppercase tracking-widest text-[10px] font-bold' }, 'No articles have been harvested yet.')
+            ) :
+            articles.map(art => e('div', { 
+              key: art.id, 
+              className: 'console-card group cursor-pointer hover:border-brand-red/40 transition-all duration-300',
+              onClick: () => switchBlogView('view', art)
+            },
+              e('div', { className: 'console-header' },
+                e('div', { className: 'console-title text-brand-red' }, 'Article'),
+                e('div', { className: 'status-line status-green' }, art.date)
+              ),
+              e('h3', { className: 'text-xl font-bold text-white group-hover:text-brand-red transition-colors' }, art.title),
+              e('p', { className: 'mt-3 text-slate-400 text-sm line-clamp-2' }, art.summary),
+              e('div', { className: 'mt-6 flex items-center justify-between' },
+                e('div', { className: 'text-[9px] uppercase tracking-widest text-slate-500 font-bold' }, `Author: ${art.author}`),
+                user.isAdmin && e('button', { 
+                  onClick: (ev) => { ev.stopPropagation(); deleteArticle(art.id); },
+                  className: 'text-brand-red/40 hover:text-brand-red text-[8px] font-black uppercase'
+                }, '[ Remove ]')
+              )
+            ))
+          ),
+
+          // Admin Drafts Section
+          user.isAdmin && e('div', { className: 'mt-12 flex flex-col gap-6 pt-12 border-t border-white/5' },
+            e('div', { className: 'flex items-center gap-3' },
+              e('div', { className: 'w-2 h-2 rounded-full bg-brand-yellow animate-pulse' }),
+              e('h3', { className: 'text-xl font-black text-brand-yellow uppercase tracking-widest' }, 'Awaiting Review (Admin Only)')
+            ),
+            drafts.length === 0 ? e('p', { className: 'text-slate-600 text-[10px] uppercase font-bold italic' }, 'No pending drafts in the hatchery queue.') :
+            drafts.map(draft => e('div', { 
+              key: draft.id, 
+              className: 'console-card border-brand-yellow/20 bg-brand-yellow/5'
+            },
+              e('div', { className: 'console-header' },
+                e('div', { className: 'console-title text-brand-yellow' }, 'Draft'),
+                e('div', { className: 'flex gap-4' },
+                  e('button', { onClick: () => approveDraft(draft.id), className: 'text-brand-green text-[9px] font-black uppercase hover:scale-110 transition-transform' }, 'Approve'),
+                  e('button', { onClick: () => deleteArticle(draft.id, true), className: 'text-brand-red text-[9px] font-black uppercase hover:scale-110 transition-transform' }, 'Discard')
+                )
+              ),
+              e('h3', { className: 'text-lg font-bold text-white' }, draft.title),
+              e('p', { className: 'text-slate-400 text-xs mt-2 line-clamp-2' }, draft.summary),
+              e('div', { className: 'mt-4 text-[8px] uppercase tracking-widest text-slate-500 font-bold' }, `From: ${draft.author} | ${draft.date}`)
+            ))
+          )
+        );
+      })()
+    );
+  };
 
   // Finance Term Helper (Hover Definitions)
   const FinanceTerm = ({term, definition, meaning, isDay}) => {
@@ -2275,27 +2598,6 @@
 
     // Initial logo for AAPL on mount
     useEffect(() => { fetchLogoForCompany('Apple Inc.', 'AAPL'); }, []);
-
-    // ── PROXY FETCH: tries two CORS proxies ─────────────────────
-    const proxyFetch = async (url) => {
-      const proxies = [
-        `https://corsproxy.io/?${encodeURIComponent(url)}`,
-        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&t=${Date.now()}`,
-      ];
-      for (const proxy of proxies) {
-        try {
-          const res = await fetch(proxy, {signal: AbortSignal.timeout(9000)});
-          if (!res.ok) continue;
-          const text = await res.text();
-          if (proxy.includes('allorigins')) {
-            const j = JSON.parse(text);
-            return j.contents;
-          }
-          return text;
-        } catch { continue; }
-      }
-      throw new Error('All proxies failed');
-    };
 
     // ── SEARCH AUTOCOMPLETE ──────────────────────────────────────
     const fetchSuggestions = async (q) => {
@@ -3411,7 +3713,13 @@
       setUser(userData);
       if (userData && userData.email) {
         localStorage.setItem('eggmash_current_user', userData.email);
-        window.dispatchEvent(new CustomEvent('eggmash-user-changed', { detail: { email: userData.email } }));
+        window.dispatchEvent(new CustomEvent('eggmash-user-changed', { 
+          detail: { 
+            email: userData.email, 
+            plan: userData.plan, 
+            isAdmin: userData.isAdmin 
+          } 
+        }));
       }
       window.isLoginTransition = true;
       if (typeof openLoader === 'function') openLoader('home', 'login');
@@ -3448,6 +3756,15 @@
       setTimeout(() => {
         const users = JSON.parse(localStorage.getItem('eggmash_users') || '[]');
         if (view === 'login') {
+          // Hardcoded Admin Account
+          if (email === 'eggmash500@gmail.com' && password === '500') {
+            setFeedback({ type: 'success', message: 'ADMINISTRATOR ACCESS GRANTED. UNLIMITED UPLINK.' });
+            localStorage.setItem('eggmash_current_plan', 'Omelet');
+            triggerEggCrash({ email: 'eggmash500@gmail.com', plan: 'Omelet', isAdmin: true });
+            setLoading(false);
+            return;
+          }
+
           const found = users.find(u => u.email === email && u.password === password);
           if (found || email === 'demo@hatchery.com') {
             const plan = found?.plan || 'Shell';
@@ -3561,6 +3878,25 @@
   authRoot.render(e(AuthPage));
   const marketRoot = ReactDOM.createRoot(document.getElementById('react-market-root'));
   marketRoot.render(e(StockMarketUI));
+  
+  // Seed Articles if empty
+  if (!localStorage.getItem('eggmash_articles')) {
+    const seed = [
+      {
+        id: 1,
+        title: "The Golden Ratio: Quantifying Yolk Density",
+        summary: "An in-depth look at how albumen fluidity correlates with market volatility in Sector 7.",
+        content: "<b>Financial Over Easy:</b> Our roosters have identified a unique pattern in the recent shell cracks. By analyzing the <i>Golden Ratio</i> of yolk-to-white distribution, we can predict a 15% rise in Sector 7 performance clusters. <br/><br/> <div class='my-4 p-4 rounded-xl bg-slate-950 border border-brand-yellow/20 inline-block'><div class='flex items-center gap-2 mb-2'><div class='w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse'></div><span class='text-[8px] font-black text-white uppercase'>YOLK CORE PROJECTION</span></div><svg width='120' height='40' viewBox='0 0 120 40'><path d='M0,30 Q30,10 60,25 T120,5' fill='none' stroke='#facc15' stroke-width='2' /></svg></div>",
+        author: "EggMash500",
+        date: new Date().toLocaleDateString(),
+        status: "approved"
+      }
+    ];
+    localStorage.setItem('eggmash_articles', JSON.stringify(seed));
+  }
+
+  const blogSystemRoot = ReactDOM.createRoot(document.getElementById('react-blog-system-root'));
+  blogSystemRoot.render(e(BlogSystem));
 
   /* ═══════════════════════════════════════════════
      UTILS
