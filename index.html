@@ -13,14 +13,14 @@
         extend: {
           colors: {
             brand: {
-              yellow: '#facc15',
-              green: '#22c55e',
-              red: '#ef4444'  
+              yellow: 'var(--color-brand-yellow, #facc15)',
+              green: 'var(--color-brand-green, #22c55e)',
+              red: 'var(--color-brand-red, #ef4444)'  
             }
           },
           boxShadow: {
-            glow: '0 20px 90px rgba(255, 255, 255, 0.14)',
-            neon: '0 0 24px rgba(251, 191, 36, 0.22)'
+            glow: 'var(--shadow-glow, 0 20px 90px rgba(255, 255, 255, 0.14))',
+            neon: 'var(--shadow-neon, 0 0 24px rgba(251, 191, 36, 0.22))'
           }
         }
       }
@@ -866,6 +866,52 @@
       from { transform: rotate(0deg); }
       to   { transform: rotate(360deg); }
     }
+
+    /* CSS Custom variables for themes */
+    :root, body.theme-cyber-yolk {
+      --color-brand-yellow: #facc15;
+      --color-brand-green: #22c55e;
+      --color-brand-red: #ef4444;
+      --shadow-neon: 0 0 24px rgba(251, 191, 36, 0.22);
+      --color-bg-primary: #050816;
+      --color-bg-panel: rgba(9, 14, 34, 0.96);
+    }
+
+    body.theme-emerald {
+      --color-brand-yellow: #10b981;
+      --color-brand-green: #34d399;
+      --color-brand-red: #f43f5e;
+      --shadow-neon: 0 0 24px rgba(16, 185, 129, 0.22);
+      --color-bg-primary: #022c22;
+      --color-bg-panel: rgba(2, 48, 32, 0.96);
+    }
+
+    body.theme-ruby {
+      --color-brand-yellow: #f43f5e;
+      --color-brand-green: #fb7185;
+      --color-brand-red: #ea580c;
+      --shadow-neon: 0 0 24px rgba(244, 63, 94, 0.22);
+      --color-bg-primary: #1c050e;
+      --color-bg-panel: rgba(30, 6, 15, 0.96);
+    }
+
+    body.theme-royal {
+      --color-brand-yellow: #a855f7;
+      --color-brand-green: #c084fc;
+      --color-brand-red: #ec4899;
+      --shadow-neon: 0 0 24px rgba(168, 85, 247, 0.22);
+      --color-bg-primary: #0f0b29;
+      --color-bg-panel: rgba(18, 11, 46, 0.96);
+    }
+
+    /* Apply background-color to body dynamically */
+    body {
+      background-color: var(--color-bg-primary, #050816);
+    }
+    /* Apply background to panels dynamically */
+    .retro-panel {
+      background: var(--color-bg-panel, rgba(9, 14, 34, 0.96)) !important;
+    }
   </style>
 </head>
 <body class="relative min-h-screen bg-slate-950 text-slate-50">
@@ -1103,11 +1149,14 @@
           
           <div class="grid gap-6 md:grid-cols-3">
             <!-- Shell Tier (Free) -->
-            <div class="console-card group relative border-white/20">
+            <div class="console-card group relative border-white/20 flex flex-col h-full" id="tier-card-Shell">
+              <div class="h-8 mb-2 flex items-center justify-center gap-2">
+                <span class="plan-active-indicator hidden text-[7px] font-black text-brand-yellow uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-brand-yellow/30 bg-brand-yellow/10 shadow-neon">Active Component</span>
+                <span class="text-[7px] font-black text-brand-yellow uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-brand-yellow/30 bg-brand-yellow/10 shadow-neon">Active by default</span>
+              </div>
               <div class="console-header">
                 <div class="flex items-center gap-3">
                   <div class="console-title">Tier 1</div>
-                  <span class="text-[7px] font-black text-brand-yellow/60 uppercase tracking-[0.2em] px-2 py-1 rounded border border-brand-yellow/20 bg-brand-yellow/5">Active by Default</span>
                 </div>
                 <div class="status-line status-yellow"><span class="status-dot"></span>FREE</div>
               </div>
@@ -1115,17 +1164,20 @@
                 <h3 class="text-2xl font-bold text-white mb-2">Shell</h3>
               </div>
               <p class="text-slate-400 text-xs mb-6">Entry-level shell access. Essential metrics for the casual trader who prefers their risk hard-boiled.</p>
-              <ul class="space-y-3 mb-8 text-[10px] text-slate-300 font-mono">
+              <ul class="space-y-3 mb-8 text-[10px] text-slate-300 font-mono flex-grow">
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Standard Ticker Scanning</li>
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Basic Price Share Charts</li>
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Basic Shell Protection</li>
               </ul>
-              <button class="w-full py-3 rounded-xl border-2 border-white/10 bg-white/5 text-[9px] font-bold uppercase tracking-widest text-slate-400 cursor-not-allowed">Active Component</button>
+              <button class="plan-select-btn w-full py-3 rounded-xl border-2 border-white/10 bg-white/5 text-[9px] font-bold uppercase tracking-widest text-slate-400 transition-all" data-plan="Shell">Select Component</button>
             </div>
 
             <!-- Yolk Tier ($5/mo) -->
-            <div class="console-card group relative border-brand-yellow/40 bg-brand-yellow/5">
-              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-brand-yellow text-slate-950 text-[8px] font-black uppercase tracking-widest rounded-full shadow-neon">Recommended</div>
+            <div class="console-card group relative border-brand-yellow/40 bg-brand-yellow/5 flex flex-col h-full" id="tier-card-Yolk">
+              <div class="h-8 mb-2 flex items-center justify-center">
+                <span class="plan-active-indicator hidden text-[7px] font-black text-brand-yellow uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-brand-yellow/30 bg-brand-yellow/10 shadow-neon">Active Component</span>
+                <span class="plan-recommended-indicator text-[7px] font-black text-slate-950 uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-brand-yellow">Recommended</span>
+              </div>
               <div class="console-header border-brand-yellow/20">
                 <div class="flex items-center gap-3">
                   <div class="console-title text-brand-yellow/70">Tier 2</div>
@@ -1134,17 +1186,20 @@
               </div>
               <h3 class="text-2xl font-bold text-white mb-2">Yolk</h3>
               <p class="text-slate-300 text-xs mb-6">Powered by YOLK Alpha 1.0.0. Quantitative AI insights for traders who want the liquid core of market logic.</p>
-              <ul class="space-y-3 mb-8 text-[10px] text-slate-200 font-mono">
+              <ul class="space-y-3 mb-8 text-[10px] text-slate-200 font-mono flex-grow">
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-yellow rounded-full shadow-glow"></div> <b>AI News Sentiment (YOLK)</b></li>
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-yellow rounded-full"></div> Rise/Decline Predictions</li>
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-yellow rounded-full"></div> Advanced Sector Logic</li>
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-yellow rounded-full"></div> Multi-Market Sync</li>
               </ul>
-              <button class="w-full py-3 rounded-xl border-2 border-brand-yellow/50 bg-brand-yellow/10 text-[9px] font-bold uppercase tracking-widest text-brand-yellow hover:bg-brand-yellow hover:text-slate-950 transition-all">Extract the Yolk</button>
+              <button class="plan-select-btn w-full py-3 rounded-xl border-2 border-brand-yellow/50 bg-brand-yellow/10 text-[9px] font-bold uppercase tracking-widest text-brand-yellow hover:bg-brand-yellow hover:text-slate-950 transition-all" data-plan="Yolk">Extract the Yolk</button>
             </div>
 
             <!-- Omelet Tier ($20/mo) -->
-            <div class="console-card group relative border-brand-green/40">
+            <div class="console-card group relative border-brand-green/40 flex flex-col h-full" id="tier-card-Omelet">
+              <div class="h-8 mb-2 flex items-center justify-center">
+                <span class="plan-active-indicator hidden text-[7px] font-black text-brand-green uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-brand-green/30 bg-brand-green/10 shadow-neon">Active Component</span>
+              </div>
               <div class="console-header border-brand-green/20">
                 <div class="flex items-center gap-3">
                   <div class="console-title text-brand-green/70">Tier 3</div>
@@ -1153,13 +1208,13 @@
               </div>
               <h3 class="text-2xl font-bold text-white mb-2">Omelet</h3>
               <p class="text-slate-400 text-xs mb-6">The ultimate institutional component. A full quantitative suite designed for those who want to fry the competition.</p>
-              <ul class="space-y-3 mb-8 text-[10px] text-slate-300 font-mono">
+              <ul class="space-y-3 mb-8 text-[10px] text-slate-300 font-mono flex-grow">
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Full Quantitative Suite</li>
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> 24/7 Rooster Response</li>
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> Multi-Market Portfolio</li>
                 <li class="flex items-center gap-2"><div class="w-1 h-1 bg-brand-green rounded-full"></div> High-Priority Prediction API</li>
               </ul>
-              <button class="w-full py-3 rounded-xl border-2 border-brand-green/30 bg-brand-green/5 text-[9px] font-bold uppercase tracking-widest text-brand-green hover:bg-brand-green/20 transition-all">Go Omelet</button>
+              <button class="plan-select-btn w-full py-3 rounded-xl border-2 border-brand-green/30 bg-brand-green/5 text-[9px] font-bold uppercase tracking-widest text-brand-green hover:bg-brand-green/20 transition-all" data-plan="Omelet">Go Omelet</button>
             </div>
           </div>
         </div>
@@ -1243,6 +1298,10 @@
   </div>
 
   <script>
+  // Load saved theme on boot
+  const savedTheme = localStorage.getItem('eggmash_theme') || 'cyber-yolk';
+  document.body.classList.add('theme-' + savedTheme);
+
   /* ═══════════════════════════════════════════════
      8-BIT EGG SMASH SOUND
   ═══════════════════════════════════════════════ */
@@ -1287,6 +1346,9 @@
   function triggerDayNightTransition() {
     if (isDayMode) return;
     isDayMode = true;
+
+    // Make the loading screen adamant for the transition
+    openLoader('home', 'day-transition');
 
     const moon   = document.getElementById('moon');
     const sun    = document.getElementById('sun');
@@ -1432,8 +1494,28 @@
     body.day-mode .page-section .text-slate-400 { color: #94a3b8 !important; }
     body.day-mode header h1 { color: #0c4a6e !important; }
     body.day-mode header p  { color: #0369a1 !important; }
-    body.day-mode #loading-overlay { background: rgba(224, 242, 254, 0.98) !important; transition: opacity 0.45s ease !important; }
-    body.day-mode #loader-status { color: #0369a1 !important; text-shadow: 0 0 10px rgba(14,165,233,0.4) !important; }
+    #loading-overlay { 
+      background: var(--color-bg-primary, #050816) !important; 
+      transition: opacity 0.45s ease !important; 
+    }
+    #loader-status { 
+      color: var(--color-brand-yellow, #facc15) !important; 
+      text-shadow: 0 0 10px var(--color-brand-yellow, rgba(250, 204, 21, 0.6)), 0 0 3px rgba(0, 0, 0, 0.95) !important; 
+    }
+    #loader-progress {
+      background: var(--color-brand-yellow, #facc15) !important;
+      box-shadow: 0 0 15px var(--color-brand-yellow, rgba(250, 204, 21, 0.4)) !important;
+    }
+    #loader-log { 
+      color: #f1f5f9 !important; 
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.9) !important; 
+      font-weight: 700 !important; 
+    }
+    #loading-overlay .mt-5.flex span { 
+      color: #f1f5f9 !important; 
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.9) !important; 
+      font-weight: 700 !important; 
+    }
     body.day-mode .footer-bar { background: rgba(224, 242, 254, 0.9) !important; border-top-color: rgba(14, 165, 233, 0.25) !important; color: #0369a1 !important; }
     body.day-mode .footer-link { color: #0284c7 !important; }
     body.day-mode .footer-link:hover { color: #0c4a6e !important; }
@@ -1496,6 +1578,37 @@
       localStorage.setItem('eggmash_current_plan', 'Omelet');
     }
 
+    // Update Services UI indicators
+    document.querySelectorAll('.console-card[id^="tier-card-"]').forEach(card => {
+      const cardPlan = card.id.replace('tier-card-', '');
+      const indicator = card.querySelector('.plan-active-indicator');
+      const recIndicator = card.querySelector('.plan-recommended-indicator');
+      const btn = card.querySelector('.plan-select-btn');
+      
+      if (cardPlan === plan) {
+        if (indicator) indicator.classList.remove('hidden');
+        if (recIndicator) recIndicator.classList.add('hidden');
+        if (btn) {
+          btn.textContent = 'Active Component';
+          btn.classList.add('opacity-50', 'cursor-not-allowed');
+          btn.disabled = true;
+        }
+        card.classList.add('border-brand-yellow/60');
+      } else {
+        if (indicator) indicator.classList.add('hidden');
+        if (recIndicator) recIndicator.classList.remove('hidden');
+        if (btn) {
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+          btn.disabled = false;
+          // Restore original text based on plan
+          if (cardPlan === 'Shell') btn.textContent = 'Select Component';
+          else if (cardPlan === 'Yolk') btn.textContent = 'Extract the Yolk';
+          else if (cardPlan === 'Omelet') btn.textContent = 'Go Omelet';
+        }
+        card.classList.remove('border-brand-yellow/60');
+      }
+    });
+
     if (!eggLoginBtn || !eggSignupBtn || !eggAccountBtn || !eggSignoutBtn) return;
     if (isLoggedIn) {
       eggLoginBtn.style.display = 'none';
@@ -1543,12 +1656,27 @@
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Aligning shell fragments...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Deploying hatchery access keys...</div>
       `;
+    } else if (mode === 'day-transition') {
+      loaderStatus.textContent = 'SOLAR GATEWAY EXPANDING...';
+      loaderLog.innerHTML = `
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Harvesting photon energy...</div>
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Recalibrating daytime logic...</div>
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Waking up the roosters...</div>
+      `;
     } else if (mode === 'signout') {
       loaderStatus.textContent = 'UNLINKING SESSION...';
       loaderLog.innerHTML = `
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Closing solar gateway...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Securing eggshell perimeter...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Purging session feathers...</div>
+      `;
+    } else if (mode === 'theme-transition') {
+      const targetTheme = window.nextTheme || 'Cyber Yolk';
+      loaderStatus.textContent = `LOADING HUES: ${targetTheme.toUpperCase()}...`;
+      loaderLog.innerHTML = `
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Calibrating prism alignment...</div>
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Buffering visual assets...</div>
+        <div class="loader-log-entry h-[20px] flex items-center justify-center">Applying CSS variables...</div>
       `;
     } else if (mode === 'auth') {
       loaderStatus.textContent = 'ACCESSING MARKET...';
@@ -1572,8 +1700,27 @@
     overlay.style.opacity = '1';
     overlay.style.pointerEvents = 'auto';
 
-    const activeStatus = isDayMode ? statusMessagesDay : statusMessages;
-    const activeLogs   = isDayMode ? logEntriesDay : logEntries;
+    let activeStatus = isDayMode ? statusMessagesDay : statusMessages;
+    let activeLogs   = isDayMode ? logEntriesDay : logEntries;
+
+    if (mode === 'theme-transition') {
+      const targetTheme = window.nextTheme || 'Cyber Yolk';
+      activeStatus = [
+        "RESTRUCTURING MATRIX...",
+        "REALIGNING LIGHT PATHS...",
+        "DECORATING THE HATCHERY...",
+        "THEME COMING OVER EASY...",
+        "APPLYING SHIELD HUES..."
+      ];
+      activeLogs = [
+        `Purging previous color codes...`,
+        `Analyzing ${targetTheme} spectrum...`,
+        `Synthesizing brand pigments...`,
+        `Dyeing background elements...`,
+        `Encrypting visual style blocks...`,
+        `Refreshing active layout...`
+      ];
+    }
 
     let progress = 0, logIndex = 0;
     const interval = setInterval(() => {
@@ -1720,6 +1867,7 @@
       if (!section) return;
       section.classList.toggle('hidden', pageId !== page);
     });
+    if (page === 'services') updateEggDropdown();
     document.querySelectorAll('.major-btn').forEach(button => {
       const isActive = button.dataset.page === page;
       button.classList.toggle('border-brand-yellow', isActive);
@@ -1761,6 +1909,10 @@
   });
   if (eggAccountBtn) eggAccountBtn.addEventListener('click', () => {
     closeEggDropdown();
+    openLoader('auth', 'auth');
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('eggmash-show-dashboard'));
+    }, 150);
   });
   if (eggSignoutBtn) eggSignoutBtn.addEventListener('click', () => {
     closeEggDropdown();
