@@ -912,6 +912,245 @@
     .retro-panel {
       background: var(--color-bg-panel, rgba(9, 14, 34, 0.96)) !important;
     }
+
+    .sun-dashboard {
+      position: relative;
+      width: min(920px, calc(100vw - 2rem));
+      margin: 0 auto;
+      padding: 0.75rem;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .sun-dashboard-shell {
+      position: relative;
+      overflow: hidden;
+      border: 2px solid rgba(250, 204, 21, 0.22);
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(254, 240, 138, 0.18), transparent 26%),
+        linear-gradient(135deg, rgba(8, 12, 30, 0.96), rgba(14, 25, 52, 0.94) 50%, rgba(67, 45, 11, 0.72));
+      box-shadow: 0 24px 90px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      animation: dashboard-rise 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .sun-dashboard-shell::before {
+      content: '';
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(from 90deg, transparent, rgba(250, 204, 21, 0.16), transparent 28%);
+      animation: solar-sweep 10s linear infinite;
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    .sun-dashboard-shell::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 24px 24px;
+      opacity: 0.16;
+      pointer-events: none;
+    }
+    .sun-dashboard-inner {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .sun-profile-card, .sun-form-card {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      background: rgba(8, 12, 30, 0.72);
+      backdrop-filter: blur(18px) saturate(160%);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+    .sun-profile-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 420px;
+      padding: 1.25rem;
+    }
+    .sun-avatar-orbit {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 132px;
+      height: 132px;
+      margin: 1.5rem auto 1rem;
+      border-radius: 999px;
+      background: rgba(250, 204, 21, 0.08);
+    }
+    .sun-avatar-orbit::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 2px dashed rgba(250, 204, 21, 0.34);
+      border-radius: inherit;
+      animation: orbit-spin 8s linear infinite;
+    }
+    .sun-avatar {
+      display: grid;
+      place-items: center;
+      width: 88px;
+      height: 88px;
+      border: 2px solid rgba(254, 240, 138, 0.56);
+      border-radius: 24px;
+      background: linear-gradient(135deg, #fde047, #f59e0b);
+      color: #1f1300;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.45rem;
+      box-shadow: 0 0 42px rgba(250, 204, 21, 0.32);
+      animation: avatar-float 3s ease-in-out infinite;
+    }
+    .sun-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .sun-stat {
+      min-height: 72px;
+      border: 1px solid rgba(250, 204, 21, 0.14);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.85rem;
+    }
+    .sun-form-card {
+      padding: 1.25rem;
+    }
+    .sun-field {
+      position: relative;
+      margin-top: 1rem;
+    }
+    .sun-field label {
+      display: block;
+      margin-bottom: 0.45rem;
+      color: rgba(254, 240, 138, 0.72);
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .sun-field input {
+      width: 100%;
+      min-height: 48px;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      background: rgba(2, 6, 23, 0.58);
+      color: #f8fafc;
+      padding: 0.9rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .sun-field input:focus {
+      border-color: rgba(250, 204, 21, 0.68);
+      box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.12);
+      outline: none;
+      transform: translateY(-1px);
+    }
+    .sun-save-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      width: 100%;
+      margin-top: 1.25rem;
+      overflow: hidden;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #fde047, #f59e0b);
+      color: #1f1300;
+      font-size: 0.68rem;
+      font-weight: 1000;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      box-shadow: 0 12px 30px rgba(245, 158, 11, 0.22);
+      transition: transform 0.18s ease, filter 0.18s ease;
+    }
+    .sun-save-button:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .sun-save-button:active { transform: translateY(0); }
+    .sun-save-button::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.42), transparent);
+      transform: translateX(-120%);
+      animation: save-shine 2.6s ease-in-out infinite;
+    }
+    .sun-feedback {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      min-height: 44px;
+      margin-top: 1rem;
+      border-radius: 12px;
+      padding: 0.8rem 0.9rem;
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .sun-feedback.success {
+      border: 1px solid rgba(34, 197, 94, 0.28);
+      background: rgba(34, 197, 94, 0.1);
+      color: #86efac;
+    }
+    .sun-feedback.error {
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+    }
+    .sun-back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: rgba(226, 232, 240, 0.72);
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      transition: color 0.18s ease, transform 0.18s ease;
+    }
+    .sun-back-button:hover {
+      color: #fde047;
+      transform: translateX(-2px);
+    }
+    body.day-mode .sun-dashboard-shell {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(254, 240, 138, 0.28), transparent 28%),
+        linear-gradient(135deg, rgba(7, 89, 133, 0.86), rgba(14, 165, 233, 0.62), rgba(250, 204, 21, 0.34));
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+    body.day-mode .sun-profile-card, body.day-mode .sun-form-card {
+      background: rgba(8, 47, 73, 0.62);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    @keyframes dashboard-rise {
+      from { opacity: 0; transform: translateY(24px) scale(0.98); filter: blur(8px); }
+      to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+    @keyframes solar-sweep {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes orbit-spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes avatar-float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes save-shine {
+      0%, 45% { transform: translateX(-120%); }
+      70%, 100% { transform: translateX(120%); }
+    }
+    @media (max-width: 780px) {
+      .sun-dashboard-inner { grid-template-columns: 1fr; }
+      .sun-profile-card { min-height: auto; }
+      .sun-stat-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body class="relative min-h-screen bg-slate-950 text-slate-50">
@@ -1867,6 +2106,8 @@
       if (!section) return;
       section.classList.toggle('hidden', pageId !== page);
     });
+    document.body.dataset.activePage = page;
+    window.dispatchEvent(new CustomEvent('eggmash-page-changed', { detail: { page } }));
     if (page === 'services') updateEggDropdown();
     document.querySelectorAll('.major-btn').forEach(button => {
       const isActive = button.dataset.page === page;
@@ -2542,14 +2783,22 @@
 
     useEffect(() => {
       const root = document.getElementById('react-market-root');
+      const homeSection = document.getElementById('home');
       if (!root) return;
       const check = () => {
-        setIsVisible(!root.classList.contains('opacity-0') && root.style.display !== 'none');
+        const marketIsOpen = !root.classList.contains('opacity-0') && root.style.display !== 'none';
+        const homeIsOpen = homeSection && !homeSection.classList.contains('hidden');
+        setIsVisible(marketIsOpen && homeIsOpen);
       };
       const obs = new MutationObserver(check);
       obs.observe(root, { attributes: true, attributeFilter: ['class', 'style'] });
+      if (homeSection) obs.observe(homeSection, { attributes: true, attributeFilter: ['class'] });
+      window.addEventListener('eggmash-page-changed', check);
       check();
-      return () => obs.disconnect();
+      return () => {
+        obs.disconnect();
+        window.removeEventListener('eggmash-page-changed', check);
+      };
     }, []);
 
     const scrollTo = (id) => {
@@ -3838,7 +4087,7 @@
   };
 
 
-  /* ─── AuthPage (unchanged from original) ────────────────────── */
+  /* ─── AuthPage with animated account dashboard ────────────────────── */
   const AuthPage = () => {
     const [view, setView] = useState('login'); 
     const [user, setUser] = useState(null);
@@ -3849,6 +4098,23 @@
     const [loading, setLoading] = useState(false);
     const [feedback, setFeedback] = useState({ type: 'none', message: '' });
     const [complexity, setComplexity] = useState(0);
+    const [profile, setProfile] = useState({ name: '', email: '', password: '' });
+
+    const getStoredUsers = () => {
+      try { return JSON.parse(localStorage.getItem('eggmash_users') || '[]'); }
+      catch(err) { return []; }
+    };
+
+    const getCurrentProfile = () => {
+      const currentEmail = localStorage.getItem('eggmash_current_user') || '';
+      const users = getStoredUsers();
+      const found = users.find(u => u.email === currentEmail) || {};
+      return {
+        name: found.name || localStorage.getItem('eggmash_current_name') || (currentEmail ? currentEmail.split('@')[0] : 'Solar Trader'),
+        email: currentEmail,
+        password: found.password || ''
+      };
+    };
 
     const switchView = (newView) => {
       if (view === newView) return;
@@ -3857,6 +4123,7 @@
         setView(newView);
         setFeedback({ type: 'none', message: '' });
         setConfirmPassword('');
+        if (newView === 'dashboard') setProfile(getCurrentProfile());
         setTransitioning(false);
       }, 250);
     };
@@ -3881,6 +4148,21 @@
       const storedUser = localStorage.getItem('eggmash_current_user');
       if (storedUser) setUser({ email: storedUser });
       if (typeof runHeaderTypewriter === 'function') runHeaderTypewriter();
+    }, [view]);
+
+    useEffect(() => {
+      const showDashboard = () => {
+        const storedUser = localStorage.getItem('eggmash_current_user');
+        if (!storedUser) {
+          switchView('login');
+          setFeedback({ type: 'error', message: 'LOGIN REQUIRED BEFORE DASHBOARD ACCESS.' });
+          return;
+        }
+        setProfile(getCurrentProfile());
+        switchView('dashboard');
+      };
+      window.addEventListener('eggmash-show-dashboard', showDashboard);
+      return () => window.removeEventListener('eggmash-show-dashboard', showDashboard);
     }, [view]);
 
     useEffect(() => {
@@ -3930,7 +4212,7 @@
           if (users.find(u => u.email === email)) {
             setFeedback({ type: 'error', message: 'ACCESS DENIED: IDENTIFIER ALREADY IN HATCHERY.' });
           } else {
-            users.push({ email, password, plan: 'Shell' });
+            users.push({ name: email.split('@')[0], email, password, plan: 'Shell' });
             localStorage.setItem('eggmash_users', JSON.stringify(users));
             setFeedback({ type: 'success', message: 'IDENTITY CREATED. INITIALIZING SESSION...' });
             setTimeout(() => switchView('login'), 2500);
@@ -3949,9 +4231,134 @@
       }, 1000);
     };
 
+    const updateProfileField = (field, value) => {
+      setProfile(current => ({ ...current, [field]: value }));
+      setFeedback({ type: 'none', message: '' });
+    };
+
+    const handleDashboardSave = (ev) => {
+      ev.preventDefault();
+      const nextName = profile.name.trim();
+      const nextEmail = profile.email.trim().toLowerCase();
+      const nextPassword = profile.password;
+      const currentEmail = localStorage.getItem('eggmash_current_user') || '';
+
+      if (!nextName || !nextEmail) {
+        setFeedback({ type: 'error', message: 'NAME AND EMAIL ARE REQUIRED.' });
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
+        setFeedback({ type: 'error', message: 'EMAIL FORMAT REJECTED BY HATCHERY.' });
+        return;
+      }
+      if (nextPassword && nextPassword.length < 3) {
+        setFeedback({ type: 'error', message: 'PASSWORD NEEDS AT LEAST 3 SYMBOLS.' });
+        return;
+      }
+
+      const users = getStoredUsers();
+      const duplicate = users.some(u => u.email === nextEmail && u.email !== currentEmail);
+      if (duplicate) {
+        setFeedback({ type: 'error', message: 'EMAIL ALREADY LINKED TO ANOTHER SHELL.' });
+        return;
+      }
+
+      let updated = false;
+      const nextUsers = users.map(u => {
+        if (u.email !== currentEmail) return u;
+        updated = true;
+        return { ...u, name: nextName, email: nextEmail, password: nextPassword || u.password || '', plan: u.plan || localStorage.getItem('eggmash_current_plan') || 'Shell' };
+      });
+      if (!updated && currentEmail) {
+        nextUsers.push({ name: nextName, email: nextEmail, password: nextPassword || '', plan: localStorage.getItem('eggmash_current_plan') || 'Shell' });
+      }
+
+      localStorage.setItem('eggmash_users', JSON.stringify(nextUsers));
+      localStorage.setItem('eggmash_current_user', nextEmail);
+      localStorage.setItem('eggmash_current_name', nextName);
+      setEmail(nextEmail);
+      setPassword(nextPassword);
+      setUser({ email: nextEmail, name: nextName });
+      setProfile({ name: nextName, email: nextEmail, password: nextPassword });
+      setFeedback({ type: 'success', message: 'SOLAR PROFILE SYNCED.' });
+      window.dispatchEvent(new CustomEvent('eggmash-user-changed', {
+        detail: { email: nextEmail, name: nextName, plan: localStorage.getItem('eggmash_current_plan') || 'Shell' }
+      }));
+      if (typeof updateEggDropdown === 'function') updateEggDropdown();
+    };
+
     const isLogin = view === 'login';
     const isSignup = view === 'signup';
     const isForgot = view === 'forgot';
+    const isDashboard = view === 'dashboard';
+
+    if (isDashboard) {
+      const initials = (profile.name || profile.email || 'EM').slice(0, 2).toUpperCase();
+      const plan = localStorage.getItem('eggmash_current_plan') || 'Shell';
+      const passwordScore = Math.min(100, (profile.password || '').length * 12);
+      return e('div', { className: 'sun-dashboard' },
+        e('div', { className: 'sun-dashboard-shell' },
+          e('div', { className: 'sun-dashboard-inner' },
+            e('aside', { className: 'sun-profile-card' },
+              e('div', null,
+                e('button', { type: 'button', onClick: () => switchView('login'), className: 'sun-back-button' }, '< Terminal'),
+                e('div', { className: 'sun-avatar-orbit' }, e('div', { className: 'sun-avatar' }, initials)),
+                e('div', { className: 'text-center' },
+                  e('div', { className: 'inline-flex items-center gap-2 rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-brand-yellow' },
+                    e('span', { className: 'status-dot bg-brand-yellow' }),
+                    'Sun Phase'
+                  ),
+                  e('h2', { className: 'mt-4 text-2xl font-black text-white uppercase tracking-tight' }, profile.name || 'Solar Trader'),
+                  e('p', { className: 'mt-2 break-all text-xs font-bold text-slate-300/80' }, profile.email || 'No uplink linked')
+                )
+              ),
+              e('div', { className: 'sun-stat-grid' },
+                e('div', { className: 'sun-stat' },
+                  e('div', { className: 'text-[8px] font-black uppercase tracking-[0.18em] text-slate-400' }, 'Plan'),
+                  e('div', { className: 'mt-3 text-sm font-black text-brand-yellow uppercase' }, plan)
+                ),
+                e('div', { className: 'sun-stat' },
+                  e('div', { className: 'text-[8px] font-black uppercase tracking-[0.18em] text-slate-400' }, 'Security'),
+                  e('div', { className: 'mt-3 text-sm font-black text-brand-green uppercase' }, passwordScore > 55 ? 'Bright' : 'Warming')
+                )
+              )
+            ),
+            e('section', { className: 'sun-form-card' },
+              e('div', { className: 'mb-5' },
+                e('div', { className: 'inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-slate-200' },
+                  e('span', { className: 'h-2 w-2 rounded-full bg-brand-yellow animate-pulse' }),
+                  'Account Dashboard'
+                ),
+                e('h3', { className: 'mt-4 text-2xl font-black text-white uppercase' }, 'Tune Your Solar Identity'),
+                e('p', { className: 'mt-2 text-sm font-semibold leading-relaxed text-slate-300/80' }, 'Update your hatchery profile and keep your trading cockpit synced.')
+              ),
+              e('form', { onSubmit: handleDashboardSave },
+                e('div', { className: 'sun-field' },
+                  e('label', null, 'Display Name'),
+                  e('input', { type: 'text', value: profile.name, onChange: ev => updateProfileField('name', ev.target.value), placeholder: 'Solar Trader', required: true })
+                ),
+                e('div', { className: 'sun-field' },
+                  e('label', null, 'Email Uplink'),
+                  e('input', { type: 'email', value: profile.email, onChange: ev => updateProfileField('email', ev.target.value), placeholder: 'name@hatchery.com', required: true })
+                ),
+                e('div', { className: 'sun-field' },
+                  e('label', null, 'Password Sequence'),
+                  e('input', { type: 'password', value: profile.password, onChange: ev => updateProfileField('password', ev.target.value), placeholder: 'Enter a new sequence' })
+                ),
+                e('div', { className: 'mt-4 h-2 overflow-hidden rounded-full bg-white/10' },
+                  e('div', { className: 'h-full rounded-full bg-brand-yellow transition-all duration-500', style: { width: Math.max(8, passwordScore) + '%' } })
+                ),
+                feedback.type !== 'none' && e('div', { className: 'sun-feedback ' + (feedback.type === 'error' ? 'error' : 'success') },
+                  e('span', { className: 'h-2 w-2 rounded-full ' + (feedback.type === 'error' ? 'bg-brand-red' : 'bg-brand-green') }),
+                  feedback.message
+                ),
+                e('button', { type: 'submit', className: 'sun-save-button' }, 'Save Solar Profile')
+              )
+            )
+          )
+        )
+      );
+    }
 
     return e('div', { style:{width:'min(560px, calc(100% - 2rem))',margin:'0 auto',padding:'0.75rem'}, className: 'mx-auto max-md py-4' },
       e('div', { className: 'flex flex-col gap-8 transition-all duration-300 ' + (feedback.type === 'error' ? 'animate-shake' : '') + ' ' + (transitioning ? 'opacity-0 -translate-x-4' : 'opacity-100 translate-x-0') },
