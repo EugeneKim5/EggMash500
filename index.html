@@ -904,6 +904,15 @@
       --color-bg-panel: rgba(18, 11, 46, 0.96);
     }
 
+    body.theme-ocean-bell {
+      --color-brand-yellow: #38bdf8;
+      --color-brand-green: #2dd4bf;
+      --color-brand-red: #fb7185;
+      --shadow-neon: 0 0 24px rgba(56, 189, 248, 0.22);
+      --color-bg-primary: #06121f;
+      --color-bg-panel: rgba(8, 24, 40, 0.96);
+    }
+
     /* Apply background-color to body dynamically */
     body {
       background-color: var(--color-bg-primary, #050816);
@@ -994,14 +1003,17 @@
       place-items: center;
       width: 88px;
       height: 88px;
-      border: 2px solid rgba(254, 240, 138, 0.56);
-      border-radius: 24px;
-      background: linear-gradient(135deg, #fde047, #f59e0b);
-      color: #1f1300;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 1.45rem;
-      box-shadow: 0 0 42px rgba(250, 204, 21, 0.32);
+      filter: drop-shadow(0 0 28px rgba(250, 204, 21, 0.46));
+      image-rendering: pixelated;
       animation: avatar-float 3s ease-in-out infinite;
+    }
+    .sun-avatar svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
     }
     .sun-stat-grid {
       display: grid;
@@ -1103,6 +1115,57 @@
       background: rgba(239, 68, 68, 0.1);
       color: #fca5a5;
     }
+    .sun-verification-box {
+      margin-top: 1rem;
+      border: 1px solid rgba(250, 204, 21, 0.28);
+      border-radius: 14px;
+      background: rgba(250, 204, 21, 0.08);
+      padding: 1rem;
+      animation: dashboard-rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .sun-theme-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.8rem;
+      align-items: center;
+      margin-top: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.85rem;
+    }
+    .sun-theme-swatches {
+      display: flex;
+      gap: 0.35rem;
+      margin-top: 0.55rem;
+    }
+    .sun-theme-swatch {
+      width: 22px;
+      height: 22px;
+      border: 2px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      box-shadow: 0 0 14px rgba(0, 0, 0, 0.18);
+    }
+    .sun-cycle-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid rgba(250, 204, 21, 0.28);
+      border-radius: 12px;
+      background: rgba(250, 204, 21, 0.12);
+      color: #fde047;
+      padding: 0 0.9rem;
+      font-size: 0.58rem;
+      font-weight: 1000;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+    .sun-cycle-button:hover {
+      transform: translateY(-1px);
+      background: rgba(250, 204, 21, 0.18);
+    }
     .sun-back-button {
       display: inline-flex;
       align-items: center;
@@ -1150,6 +1213,7 @@
       .sun-dashboard-inner { grid-template-columns: 1fr; }
       .sun-profile-card { min-height: auto; }
       .sun-stat-grid { grid-template-columns: 1fr; }
+      .sun-theme-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -1537,9 +1601,32 @@
   </div>
 
   <script>
+  const EGGMASH_THEMES = [
+    { id: 'cyber-yolk', label: 'Cyber Yolk', swatches: ['#facc15', '#22c55e', '#050816'] },
+    { id: 'emerald', label: 'Mint Matrix', swatches: ['#10b981', '#34d399', '#022c22'] },
+    { id: 'ruby', label: 'Berry Signal', swatches: ['#f43f5e', '#fb7185', '#1c050e'] },
+    { id: 'royal', label: 'Royal Neon', swatches: ['#a855f7', '#c084fc', '#0f0b29'] },
+    { id: 'ocean-bell', label: 'Ocean Bell', swatches: ['#38bdf8', '#2dd4bf', '#06121f'] }
+  ];
+  window.EGGMASH_THEMES = EGGMASH_THEMES;
+
+  function applyEggMashTheme(themeId, options = {}) {
+    const fallbackId = 'cyber-yolk';
+    const theme = EGGMASH_THEMES.find(item => item.id === themeId) || EGGMASH_THEMES[0];
+    EGGMASH_THEMES.forEach(item => document.body.classList.remove('theme-' + item.id));
+    ['theme-emerald', 'theme-ruby', 'theme-royal', 'theme-cyber-yolk', 'theme-ocean-bell'].forEach(cls => document.body.classList.remove(cls));
+    document.body.classList.add('theme-' + (theme ? theme.id : fallbackId));
+    localStorage.setItem('eggmash_theme', theme ? theme.id : fallbackId);
+    if (options.announce !== false) {
+      window.dispatchEvent(new CustomEvent('eggmash-theme-cycle', { detail: { theme: theme || EGGMASH_THEMES[0] } }));
+    }
+    return theme || EGGMASH_THEMES[0];
+  }
+  window.applyEggMashTheme = applyEggMashTheme;
+
   // Load saved theme on boot
   const savedTheme = localStorage.getItem('eggmash_theme') || 'cyber-yolk';
-  document.body.classList.add('theme-' + savedTheme);
+  applyEggMashTheme(savedTheme, { announce: false });
 
   /* ═══════════════════════════════════════════════
      8-BIT EGG SMASH SOUND
@@ -4099,6 +4186,9 @@
     const [feedback, setFeedback] = useState({ type: 'none', message: '' });
     const [complexity, setComplexity] = useState(0);
     const [profile, setProfile] = useState({ name: '', email: '', password: '' });
+    const [activeThemeId, setActiveThemeId] = useState(localStorage.getItem('eggmash_theme') || 'cyber-yolk');
+    const [emailVerification, setEmailVerification] = useState(null);
+    const [verificationInput, setVerificationInput] = useState('');
 
     const getStoredUsers = () => {
       try { return JSON.parse(localStorage.getItem('eggmash_users') || '[]'); }
@@ -4110,7 +4200,7 @@
       const users = getStoredUsers();
       const found = users.find(u => u.email === currentEmail) || {};
       return {
-        name: found.name || localStorage.getItem('eggmash_current_name') || (currentEmail ? currentEmail.split('@')[0] : 'Solar Trader'),
+        name: found.name || localStorage.getItem('eggmash_current_name') || (currentEmail ? currentEmail.split('@')[0] : 'Hatchery Operator'),
         email: currentEmail,
         password: found.password || ''
       };
@@ -4123,6 +4213,8 @@
         setView(newView);
         setFeedback({ type: 'none', message: '' });
         setConfirmPassword('');
+        setEmailVerification(null);
+        setVerificationInput('');
         if (newView === 'dashboard') setProfile(getCurrentProfile());
         setTransitioning(false);
       }, 250);
@@ -4149,6 +4241,14 @@
       if (storedUser) setUser({ email: storedUser });
       if (typeof runHeaderTypewriter === 'function') runHeaderTypewriter();
     }, [view]);
+
+    useEffect(() => {
+      const onThemeCycle = event => {
+        if (event.detail && event.detail.theme) setActiveThemeId(event.detail.theme.id);
+      };
+      window.addEventListener('eggmash-theme-cycle', onThemeCycle);
+      return () => window.removeEventListener('eggmash-theme-cycle', onThemeCycle);
+    }, []);
 
     useEffect(() => {
       const showDashboard = () => {
@@ -4233,36 +4333,13 @@
 
     const updateProfileField = (field, value) => {
       setProfile(current => ({ ...current, [field]: value }));
+      setEmailVerification(null);
+      setVerificationInput('');
       setFeedback({ type: 'none', message: '' });
     };
 
-    const handleDashboardSave = (ev) => {
-      ev.preventDefault();
-      const nextName = profile.name.trim();
-      const nextEmail = profile.email.trim().toLowerCase();
-      const nextPassword = profile.password;
-      const currentEmail = localStorage.getItem('eggmash_current_user') || '';
-
-      if (!nextName || !nextEmail) {
-        setFeedback({ type: 'error', message: 'NAME AND EMAIL ARE REQUIRED.' });
-        return;
-      }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
-        setFeedback({ type: 'error', message: 'EMAIL FORMAT REJECTED BY HATCHERY.' });
-        return;
-      }
-      if (nextPassword && nextPassword.length < 3) {
-        setFeedback({ type: 'error', message: 'PASSWORD NEEDS AT LEAST 3 SYMBOLS.' });
-        return;
-      }
-
+    const commitDashboardProfile = ({ nextName, nextEmail, nextPassword, currentEmail }) => {
       const users = getStoredUsers();
-      const duplicate = users.some(u => u.email === nextEmail && u.email !== currentEmail);
-      if (duplicate) {
-        setFeedback({ type: 'error', message: 'EMAIL ALREADY LINKED TO ANOTHER SHELL.' });
-        return;
-      }
-
       let updated = false;
       const nextUsers = users.map(u => {
         if (u.email !== currentEmail) return u;
@@ -4280,11 +4357,78 @@
       setPassword(nextPassword);
       setUser({ email: nextEmail, name: nextName });
       setProfile({ name: nextName, email: nextEmail, password: nextPassword });
-      setFeedback({ type: 'success', message: 'SOLAR PROFILE SYNCED.' });
+      setEmailVerification(null);
+      setVerificationInput('');
+      setFeedback({ type: 'success', message: 'EGGAUTH IDENTITY SYNCED.' });
       window.dispatchEvent(new CustomEvent('eggmash-user-changed', {
         detail: { email: nextEmail, name: nextName, plan: localStorage.getItem('eggmash_current_plan') || 'Shell' }
       }));
       if (typeof updateEggDropdown === 'function') updateEggDropdown();
+    };
+
+    const cycleDashboardTheme = () => {
+      const themes = window.EGGMASH_THEMES || [];
+      if (!themes.length) return;
+      const currentIndex = Math.max(0, themes.findIndex(item => item.id === activeThemeId));
+      const nextTheme = themes[(currentIndex + 1) % themes.length];
+      const applied = typeof window.applyEggMashTheme === 'function'
+        ? window.applyEggMashTheme(nextTheme.id)
+        : nextTheme;
+      setActiveThemeId(applied.id);
+      setFeedback({ type: 'success', message: `${applied.label.toUpperCase()} HATCHERY THEME LOADED.` });
+    };
+
+    const handleDashboardSave = (ev) => {
+      ev.preventDefault();
+      const nextName = profile.name.trim();
+      const nextEmail = profile.email.trim().toLowerCase();
+      const nextPassword = profile.password;
+      const currentEmail = localStorage.getItem('eggmash_current_user') || '';
+
+      if (!nextName || !nextEmail) {
+        setFeedback({ type: 'error', message: 'OPERATOR ALIAS AND EGGAUTH EMAIL REQUIRED.' });
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
+        setFeedback({ type: 'error', message: 'EGGAUTH EMAIL FORMAT REJECTED.' });
+        return;
+      }
+      if (nextPassword && nextPassword.length < 3) {
+        setFeedback({ type: 'error', message: 'ACCESS SEQUENCE NEEDS AT LEAST 3 SYMBOLS.' });
+        return;
+      }
+
+      const users = getStoredUsers();
+      const duplicate = users.some(u => u.email === nextEmail && u.email !== currentEmail);
+      if (duplicate) {
+        setFeedback({ type: 'error', message: 'EGGAUTH EMAIL ALREADY LINKED TO ANOTHER SHELL.' });
+        return;
+      }
+
+      if (nextEmail !== currentEmail) {
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        setEmailVerification({
+          code,
+          nextName,
+          nextEmail,
+          nextPassword,
+          currentEmail
+        });
+        setVerificationInput('');
+        setFeedback({ type: 'success', message: 'EGGAUTH VERIFICATION CODE GENERATED.' });
+        return;
+      }
+
+      commitDashboardProfile({ nextName, nextEmail, nextPassword, currentEmail });
+    };
+
+    const verifyEmailChange = () => {
+      if (!emailVerification) return;
+      if (verificationInput.trim() !== emailVerification.code) {
+        setFeedback({ type: 'error', message: 'EGGAUTH VERIFICATION CODE DOES NOT MATCH.' });
+        return;
+      }
+      commitDashboardProfile(emailVerification);
     };
 
     const isLogin = view === 'login';
@@ -4293,7 +4437,8 @@
     const isDashboard = view === 'dashboard';
 
     if (isDashboard) {
-      const initials = (profile.name || profile.email || 'EM').slice(0, 2).toUpperCase();
+      const themes = window.EGGMASH_THEMES || [];
+      const activeTheme = themes.find(item => item.id === activeThemeId) || themes[0] || { label: 'Cyber Yolk', swatches: ['#facc15', '#22c55e', '#050816'] };
       const plan = localStorage.getItem('eggmash_current_plan') || 'Shell';
       const passwordScore = Math.min(100, (profile.password || '').length * 12);
       return e('div', { className: 'sun-dashboard' },
@@ -4301,25 +4446,26 @@
           e('div', { className: 'sun-dashboard-inner' },
             e('aside', { className: 'sun-profile-card' },
               e('div', null,
-                e('button', { type: 'button', onClick: () => switchView('login'), className: 'sun-back-button' }, '< Terminal'),
-                e('div', { className: 'sun-avatar-orbit' }, e('div', { className: 'sun-avatar' }, initials)),
+                e('div', { className: 'sun-avatar-orbit' },
+                  e('div', { className: 'sun-avatar', dangerouslySetInnerHTML: { __html: normalCursorSvg } })
+                ),
                 e('div', { className: 'text-center' },
                   e('div', { className: 'inline-flex items-center gap-2 rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-brand-yellow' },
                     e('span', { className: 'status-dot bg-brand-yellow' }),
-                    'Sun Phase'
+                    'EggAuth Active'
                   ),
-                  e('h2', { className: 'mt-4 text-2xl font-black text-white uppercase tracking-tight' }, profile.name || 'Solar Trader'),
-                  e('p', { className: 'mt-2 break-all text-xs font-bold text-slate-300/80' }, profile.email || 'No uplink linked')
+                  e('h2', { className: 'mt-4 text-2xl font-black text-white uppercase tracking-tight' }, profile.name || 'Hatchery Operator'),
+                  e('p', { className: 'mt-2 break-all text-xs font-bold text-slate-300/80' }, profile.email || 'No EggAuth uplink linked')
                 )
               ),
               e('div', { className: 'sun-stat-grid' },
                 e('div', { className: 'sun-stat' },
-                  e('div', { className: 'text-[8px] font-black uppercase tracking-[0.18em] text-slate-400' }, 'Plan'),
+                  e('div', { className: 'text-[8px] font-black uppercase tracking-[0.18em] text-slate-400' }, 'Access Tier'),
                   e('div', { className: 'mt-3 text-sm font-black text-brand-yellow uppercase' }, plan)
                 ),
                 e('div', { className: 'sun-stat' },
-                  e('div', { className: 'text-[8px] font-black uppercase tracking-[0.18em] text-slate-400' }, 'Security'),
-                  e('div', { className: 'mt-3 text-sm font-black text-brand-green uppercase' }, passwordScore > 55 ? 'Bright' : 'Warming')
+                  e('div', { className: 'text-[8px] font-black uppercase tracking-[0.18em] text-slate-400' }, 'Shell Integrity'),
+                  e('div', { className: 'mt-3 text-sm font-black text-brand-green uppercase' }, passwordScore > 55 ? 'Locked' : 'Calibrating')
                 )
               )
             ),
@@ -4327,32 +4473,64 @@
               e('div', { className: 'mb-5' },
                 e('div', { className: 'inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-slate-200' },
                   e('span', { className: 'h-2 w-2 rounded-full bg-brand-yellow animate-pulse' }),
-                  'Account Dashboard'
+                  'EggAuth Console'
                 ),
-                e('h3', { className: 'mt-4 text-2xl font-black text-white uppercase' }, 'Tune Your Solar Identity'),
-                e('p', { className: 'mt-2 text-sm font-semibold leading-relaxed text-slate-300/80' }, 'Update your hatchery profile and keep your trading cockpit synced.')
+                e('h3', { className: 'mt-4 text-2xl font-black text-white uppercase' }, 'Configure Hatchery Access'),
+                e('p', { className: 'mt-2 text-sm font-semibold leading-relaxed text-slate-300/80' }, 'Update your EggAuth credentials and keep EggMash500 synced across the market terminal.')
               ),
               e('form', { onSubmit: handleDashboardSave },
                 e('div', { className: 'sun-field' },
-                  e('label', null, 'Display Name'),
-                  e('input', { type: 'text', value: profile.name, onChange: ev => updateProfileField('name', ev.target.value), placeholder: 'Solar Trader', required: true })
+                  e('label', null, 'Operator Alias'),
+                  e('input', { type: 'text', value: profile.name, onChange: ev => updateProfileField('name', ev.target.value), placeholder: 'Hatchery Operator', required: true })
                 ),
                 e('div', { className: 'sun-field' },
-                  e('label', null, 'Email Uplink'),
+                  e('label', null, 'EggAuth Email'),
                   e('input', { type: 'email', value: profile.email, onChange: ev => updateProfileField('email', ev.target.value), placeholder: 'name@hatchery.com', required: true })
                 ),
                 e('div', { className: 'sun-field' },
-                  e('label', null, 'Password Sequence'),
-                  e('input', { type: 'password', value: profile.password, onChange: ev => updateProfileField('password', ev.target.value), placeholder: 'Enter a new sequence' })
+                  e('label', null, 'Access Sequence'),
+                  e('input', { type: 'password', value: profile.password, onChange: ev => updateProfileField('password', ev.target.value), placeholder: 'Enter a new access sequence' })
                 ),
                 e('div', { className: 'mt-4 h-2 overflow-hidden rounded-full bg-white/10' },
                   e('div', { className: 'h-full rounded-full bg-brand-yellow transition-all duration-500', style: { width: Math.max(8, passwordScore) + '%' } })
+                ),
+                emailVerification && e('div', { className: 'sun-verification-box' },
+                  e('div', { className: 'text-[8px] font-black uppercase tracking-[0.18em] text-brand-yellow' }, 'Verify EggAuth Email'),
+                  e('p', { className: 'mt-2 text-[11px] font-bold leading-relaxed text-slate-300/85' },
+                    `Enter the EggAuth 6-digit code for ${emailVerification.nextEmail}. Demo code: ${emailVerification.code}`
+                  ),
+                  e('div', { className: 'mt-3 grid grid-cols-[1fr_auto] gap-2 max-[560px]:grid-cols-1' },
+                    e('input', {
+                      type: 'text',
+                      inputMode: 'numeric',
+                      maxLength: 6,
+                      value: verificationInput,
+                      onChange: ev => setVerificationInput(ev.target.value.replace(/\D/g, '').slice(0, 6)),
+                      placeholder: '000000',
+                      className: 'min-h-[42px] rounded-xl border-2 border-white/10 bg-slate-950/60 px-4 text-sm font-black tracking-[0.35em] text-white outline-none transition focus:border-brand-yellow/60'
+                    }),
+                    e('button', { type: 'button', onClick: verifyEmailChange, className: 'sun-cycle-button' }, 'Verify')
+                  )
+                ),
+                e('div', { className: 'sun-theme-row' },
+                  e('div', null,
+                    e('div', { className: 'text-[8px] font-black uppercase tracking-[0.18em] text-slate-400' }, 'Hatchery Theme'),
+                    e('div', { className: 'mt-1 text-sm font-black uppercase text-white' }, activeTheme.label),
+                    e('div', { className: 'sun-theme-swatches' },
+                      activeTheme.swatches.map((color, index) => e('span', {
+                        key: color + index,
+                        className: 'sun-theme-swatch',
+                        style: { background: color }
+                      }))
+                    )
+                  ),
+                  e('button', { type: 'button', onClick: cycleDashboardTheme, className: 'sun-cycle-button' }, 'Rotate')
                 ),
                 feedback.type !== 'none' && e('div', { className: 'sun-feedback ' + (feedback.type === 'error' ? 'error' : 'success') },
                   e('span', { className: 'h-2 w-2 rounded-full ' + (feedback.type === 'error' ? 'bg-brand-red' : 'bg-brand-green') }),
                   feedback.message
                 ),
-                e('button', { type: 'submit', className: 'sun-save-button' }, 'Save Solar Profile')
+                e('button', { type: 'submit', className: 'sun-save-button' }, 'Save EggAuth Settings')
               )
             )
           )
