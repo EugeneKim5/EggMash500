@@ -548,7 +548,7 @@
       100% { opacity: 0; transform: scale(1.3); }
     }
 
-    .loader-log-entry { animation: log-flicker 0.1s ease-out; }
+    .loader-log-entry { animation: log-flicker 0.1s ease-out; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     @keyframes log-flicker {
       0% { opacity: 0; transform: translateX(-5px); }
       100% { opacity: 1; transform: translateX(0); }
@@ -556,6 +556,10 @@
     #loader-status {
       text-shadow: 0 0 10px rgba(250,204,21,0.5);
       animation: status-glitch 4s infinite;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
     }
     @keyframes status-glitch {
       0%, 90%, 100% { transform: skew(0); }
@@ -1349,9 +1353,9 @@
           <button data-page="contact"  class="major-btn rounded-[14px] border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition duration-150 hover:border-white/20 hover:bg-white/10 hover:text-white">Contact</button>
         </nav>
         <div class="relative flex items-center gap-3">
-          <div id="header-plan-badge" class="hidden items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
-            <div class="w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse"></div>
-            <span id="header-plan-text" class="text-[8px] font-black uppercase tracking-widest text-slate-300">Shell Account</span>
+          <div id="header-plan-badge" class="hidden items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md shadow-[0_0_20px_rgba(250,204,21,0.08)]">
+            <div id="header-plan-dot" class="w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse"></div>
+            <span id="header-plan-text" class="text-[9px] font-black uppercase tracking-[0.22em] text-white">Shell Account</span>
           </div>
           <button id="header-profile" type="button" class="flex h-14 w-14 items-center justify-center rounded-[18px] bg-white/5 shadow-glow border border-white/10 transition duration-150 hover:bg-white/10 cursor-pointer">
             <svg id="profile-svg" width="44" height="44" viewBox="0 0 16 16" shape-rendering="crispEdges">
@@ -1824,6 +1828,31 @@
       background: var(--color-bg-primary, #050816) !important; 
       transition: opacity 0.45s ease !important; 
     }
+    body.day-mode #loading-overlay {
+      background: linear-gradient(135deg, rgba(240, 249, 255, 0.98) 0%, rgba(255, 247, 195, 0.9) 45%, rgba(186, 230, 253, 0.96) 100%) !important;
+      color: #0f172a !important;
+    }
+    body.day-mode #loading-overlay .bg-white\/5,
+    body.day-mode #loading-overlay .bg-white\/10 {
+      background: rgba(255, 255, 255, 0.7) !important;
+      border-color: rgba(14, 165, 233, 0.2) !important;
+    }
+    body.day-mode #loading-overlay .border-white\/10 {
+      border-color: rgba(14, 165, 233, 0.22) !important;
+    }
+    body.day-mode #loader-status { 
+      color: #0f172a !important; 
+      text-shadow: none !important;
+    }
+    body.day-mode #loader-progress {
+      background: linear-gradient(90deg, #f59e0b, #facc15) !important;
+      box-shadow: 0 0 18px rgba(245, 158, 11, 0.3) !important;
+    }
+    body.day-mode #loading-overlay .text-slate-300,
+    body.day-mode #loading-overlay .text-slate-500 {
+      color: #0f172a !important;
+      text-shadow: none !important;
+    }
     #loader-status { 
       color: var(--color-brand-yellow, #facc15) !important; 
       text-shadow: 0 0 10px var(--color-brand-yellow, rgba(250, 204, 21, 0.6)), 0 0 3px rgba(0, 0, 0, 0.95) !important; 
@@ -1945,10 +1974,15 @@
       // Update header badge
       const badge = document.getElementById('header-plan-badge');
       const text = document.getElementById('header-plan-text');
+      const dot = document.getElementById('header-plan-dot');
       if (badge && text) {
         badge.style.display = 'flex';
-        text.textContent = plan + ' Account';
-        if (plan === 'Omelet') text.style.color = '#22c55e';
+        badge.style.background = plan === 'Omelet' ? 'rgba(34,197,94,0.14)' : plan === 'Yolk' ? 'rgba(250,204,21,0.14)' : 'rgba(255,255,255,0.07)';
+        badge.style.borderColor = plan === 'Omelet' ? 'rgba(34,197,94,0.45)' : plan === 'Yolk' ? 'rgba(250,204,21,0.45)' : 'rgba(255,255,255,0.16)';
+        badge.style.boxShadow = plan !== 'Shell' ? '0 0 20px rgba(250,204,21,0.16)' : '0 0 18px rgba(255,255,255,0.06)';
+        text.textContent = `${plan} Account`;
+        text.style.color = plan === 'Omelet' ? '#22c55e' : plan === 'Yolk' ? '#facc15' : '#f8fafc';
+        if (dot) dot.style.background = plan === 'Omelet' ? '#22c55e' : plan === 'Yolk' ? '#facc15' : '#94a3b8';
       }
     } else {
       eggLoginBtn.style.display = 'block';
@@ -2245,7 +2279,9 @@
   if (eggSignoutBtn) eggSignoutBtn.addEventListener('click', () => {
     closeEggDropdown();
     localStorage.removeItem('eggmash_current_user');
-    window.dispatchEvent(new CustomEvent('eggmash-user-changed', { detail: { email: 'guest' } }));
+    localStorage.removeItem('eggmash_current_plan');
+    if (typeof updateEggDropdown === 'function') updateEggDropdown();
+    window.dispatchEvent(new CustomEvent('eggmash-user-changed', { detail: { email: 'guest', plan: 'Shell' } }));
     window.isSignOutTransition = true;
     window.isLoginTransition = false;
     openLoader('home', 'signout');
@@ -3522,8 +3558,8 @@
             e('span', {style:{fontFamily:'"Inter",system-ui,sans-serif',fontSize:11,fontWeight:600,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(250,204,21,0.45)'}}, 'Hatchery Market Terminal'),
             e('div', {style:{height:1,background:'linear-gradient(90deg,rgba(250,204,21,0.2),transparent)',width:60}})
           ),
-          // User Plan Badge
-          userEmail !== 'guest' && e('div', { 
+          // User state badge
+          userEmail && userEmail !== 'guest' && userEmail !== 'Guest' ? e('div', { 
             style: { 
               display:'flex', alignItems:'center', gap:4, padding:'6px 16px', borderRadius:24, 
               background: userPlan === 'Omelet' ? 'rgba(34,197,94,0.12)' : userPlan === 'Yolk' ? 'rgba(250,204,21,0.12)' : 'rgba(255,255,255,0.06)',
@@ -3531,16 +3567,9 @@
               boxShadow: userPlan !== 'Shell' ? '0 0 20px rgba(250,204,21,0.1)' : 'none'
             } 
           },
-            e('div', { style: { width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center', marginRight:4 } },
-              e('lottie-player', {
-                src: 'https://assets5.lottiefiles.com/packages/lf20_6p8ovm7e.json',
-                background: 'transparent', speed: '1', loop: true, autoplay: true,
-                style: { width: '100%', height: '100%' }
-              })
-            ),
-            e('span', { style: { fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.05em', color: 'rgba(255,255,255,0.9)' } }, 'Current Plan: '),
+            e('span', { style: { fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.05em', color: 'rgba(255,255,255,0.9)' } }, 'Signed In:'),
             e('span', { style: { fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.05em', color: userPlan === 'Omelet' ? '#22c55e' : userPlan === 'Yolk' ? '#facc15' : '#94a3b8' } }, userPlan)
-          )
+          ) : null
         ),
         // The greeting — plain string render, no per-word spans, no re-animation jitter
         e('div', {style:{display:'flex',flexDirection:'column',gap:6}},
@@ -3758,7 +3787,7 @@
 
           // Controls
           e('div',{style:{display:'flex',flexWrap:'wrap',justifyContent:'space-between',alignItems:'center',gap:10}},
-            e('div',{style:{display:'flex',gap:20}},
+            e('div',{style:{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}},
               [['Open',data.open,'rgba(203,213,225,0.8)'],['High',data.high,'#4ade80'],['Low',data.low,'#f87171']].map(([l,v,c])=>
                 e('div',{key:l,style:{display:'flex',flexDirection:'column',gap:2}},
                   e('span',{style:{fontSize:9,color:'rgba(100,116,139,0.55)',textTransform:'uppercase',letterSpacing:'0.1em',fontWeight:700,fontFamily:'"Inter",sans-serif'}},l),
