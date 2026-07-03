@@ -548,18 +548,34 @@
       100% { opacity: 0; transform: scale(1.3); }
     }
 
-    .loader-log-entry { animation: log-flicker 0.1s ease-out; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .loader-log-entry {
+      animation: log-flicker 0.1s ease-out;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+      min-height: 20px;
+      display: block;
+      max-width: 100%;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
     @keyframes log-flicker {
       0% { opacity: 0; transform: translateX(-5px); }
       100% { opacity: 1; transform: translateX(0); }
+    }
+    .loader-log-entry.is-hiding {
+      opacity: 0;
+      transform: translateY(2px);
     }
     #loader-status {
       text-shadow: 0 0 10px rgba(250,204,21,0.5);
       animation: status-glitch 4s infinite;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow: visible;
+      text-overflow: clip;
       display: block;
+      line-height: 1.2;
+      max-width: 100%;
     }
     @keyframes status-glitch {
       0%, 90%, 100% { transform: skew(0); }
@@ -1601,7 +1617,7 @@
         <div id="loader-progress" class="h-full w-0 bg-brand-yellow shadow-[0_0_15px_rgba(250,204,21,0.4)] transition-all duration-300 ease-out"></div>
       </div>
       <div class="mt-6 h-[20px] overflow-hidden text-[10px] uppercase tracking-[0.3em] text-slate-500">
-        <div id="loader-log" class="flex flex-col transition-transform duration-300">
+        <div id="loader-log" class="flex items-center justify-center transition-transform duration-300">
           <div class="loader-log-entry h-[20px] flex items-center justify-center">Searching for eggs...</div>
         </div>
       </div>
@@ -2023,36 +2039,20 @@
     currentLoaderMode = mode || 'default';
     if (mode === 'login') {
       loaderStatus.textContent = 'EGG VALIDATION IN PROGRESS...';
-      loaderLog.innerHTML = `
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Verifying yolk cryptography...</div>
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Aligning shell fragments...</div>
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Deploying hatchery access keys...</div>
-      `;
+      loaderLog.innerHTML = '<div class="loader-log-entry h-[20px] flex items-center justify-center">Verifying yolk cryptography...</div>';
     } else if (mode === 'day-transition') {
       loaderStatus.textContent = 'SOLAR GATEWAY EXPANDING...';
-      loaderLog.innerHTML = `
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Harvesting photon energy...</div>
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Recalibrating daytime logic...</div>
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Waking up the roosters...</div>
-      `;
+      loaderLog.innerHTML = '<div class="loader-log-entry h-[20px] flex items-center justify-center">Harvesting photon energy...</div>';
     } else if (mode === 'signout') {
       loaderStatus.textContent = 'UNLINKING SESSION...';
-      loaderLog.innerHTML = `
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Closing solar gateway...</div>
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Securing eggshell perimeter...</div>
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Purging session feathers...</div>
-      `;
+      loaderLog.innerHTML = '<div class="loader-log-entry h-[20px] flex items-center justify-center">Closing solar gateway...</div>';
     } else if (mode === 'theme-transition') {
       const targetTheme = window.nextTheme || 'Cyber Yolk';
       loaderStatus.textContent = `LOADING HUES: ${targetTheme.toUpperCase()}...`;
-      loaderLog.innerHTML = `
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Calibrating prism alignment...</div>
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Buffering visual assets...</div>
-        <div class="loader-log-entry h-[20px] flex items-center justify-center">Applying CSS variables...</div>
-      `;
+      loaderLog.innerHTML = '<div class="loader-log-entry h-[20px] flex items-center justify-center">Calibrating prism alignment...</div>';
     } else if (mode === 'auth') {
       loaderStatus.textContent = 'ACCESSING MARKET...';
-      loaderLog.innerHTML = `<div class="loader-log-entry h-[20px] flex items-center justify-center">Checking secure credentials...</div>`;
+      loaderLog.innerHTML = '<div class="loader-log-entry h-[20px] flex items-center justify-center">Checking secure credentials...</div>';
     } else {
       loaderStatus.textContent = 'BOOTING...';
       loaderLog.innerHTML = `<div class="loader-log-entry h-[20px] flex items-center justify-center">${isDayMode ? 'Scanning for sunflowers...' : 'Searching for eggs...'}</div>`;
@@ -2100,11 +2100,15 @@
       if (progress > 100) progress = 100;
       loaderProgress.style.width = `${progress}%`;
       if (progress > logIndex * 20 && logIndex < activeLogs.length) {
-        const entry = document.createElement('div');
-        entry.className = 'loader-log-entry h-[20px] flex items-center justify-center';
-        entry.textContent = activeLogs[logIndex];
-        loaderLog.appendChild(entry);
-        loaderLog.style.transform = `translateY(-${logIndex * 20}px)`;
+        const entry = loaderLog.querySelector('.loader-log-entry');
+        if (entry) {
+          entry.classList.add('is-hiding');
+          setTimeout(() => {
+            entry.textContent = activeLogs[logIndex];
+            entry.classList.remove('is-hiding');
+          }, 180);
+        }
+        loaderLog.style.transform = 'none';
         logIndex++;
       }
       if (progress > 25 && progress < 30) loaderStatus.textContent = activeStatus[0];
