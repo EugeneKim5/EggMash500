@@ -1890,6 +1890,7 @@
 
   window.addEventListener('load', () => {
     const storedUser = localStorage.getItem('eggmash_current_user');
+    if (typeof updateEggDropdown === 'function') updateEggDropdown();
     if (storedUser) {
       const staticContent = document.getElementById('home-static-content');
       const marketRoot = document.getElementById('react-market-root');
@@ -2006,6 +2007,13 @@
     updateEggDropdown();
     eggDropdown.classList.add('show');
   }
+
+  window.addEventListener('storage', () => {
+    if (typeof updateEggDropdown === 'function') updateEggDropdown();
+  });
+  window.addEventListener('eggmash-user-changed', () => {
+    if (typeof updateEggDropdown === 'function') updateEggDropdown();
+  });
 
   function setLoaderVariant(mode) {
     currentLoaderMode = mode || 'default';
