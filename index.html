@@ -3026,6 +3026,7 @@
       fiftyTwoWeekLow: 124.17, fiftyTwoWeekHigh: 198.23,
       beta: 1.23, dividendYield: 0.0052,
       marketState: 'REGULAR',
+      capRaw: 2.91e12, volRaw: 48200000, avgVolRaw: 50100000,
       history: Array.from({length: 90}, (_, i) => {
         const p = 185 + Math.sin(i/14)*4 + Math.sin(i/5)*1.2 + i*0.04 + Math.random()*0.8;
         return {time: i, price: p, high: p+0.4, low: p-0.4, open: p-0.1};
@@ -3231,6 +3232,9 @@
           beta: meta.beta ?? NaN,
           dividendYield: meta.trailingAnnualDividendYield ?? NaN,
           marketState: meta.marketState || 'REGULAR',
+          capRaw: isFinite(meta.marketCap) ? meta.marketCap : NaN,
+          volRaw: isFinite(meta.regularMarketVolume) ? meta.regularMarketVolume : NaN,
+          avgVolRaw: isFinite(meta.averageDailyVolume3Month) ? meta.averageDailyVolume3Month : NaN,
           history,
         });
       } catch (err) {
@@ -3286,6 +3290,8 @@
                 high: isFinite(q.regularMarketDayHigh) ? q.regularMarketDayHigh : d.high,
                 low:  isFinite(q.regularMarketDayLow)  ? q.regularMarketDayLow  : d.low,
                 vol:  isFinite(q.regularMarketVolume)  ? fmtVol(q.regularMarketVolume) : d.vol,
+                volRaw: isFinite(q.regularMarketVolume) ? q.regularMarketVolume : d.volRaw,
+                capRaw: isFinite(q.marketCap) ? q.marketCap : d.capRaw,
                 bid:  isFinite(q.bid) ? q.bid : d.bid,
                 ask:  isFinite(q.ask) ? q.ask : d.ask,
                 marketState: q.marketState || d.marketState,
@@ -3414,133 +3420,250 @@
     const [statArbData, setStatArbData] = useState([]);
     const [statArbView, setStatArbView] = useState('combined'); // 'pca', 'statarb', 'combined'
 
+    // ── REAL QUANT ENGINE — every score below is computed from the live
+    // price/volume series already fetched from Yahoo Finance (data.history,
+    // data.pe, data.beta, data.capRaw, etc). Nothing here is randomized.
+    const clamp10 = v => Math.max(0, Math.min(10, isFinite(v) ? v : 5));
+    const qMean  = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+    const qStdev = arr => { if (arr.length < 2) return 0; const m = qMean(arr); return Math.sqrt(qMean(arr.map(x=>(x-m)**2))); };
+
+    const computeQuant = () => {
+      const closes = data.history.map(d=>d.price).filter(isFinite);
+      const n = closes.length;
+      if (n < 6) return null;
+
+      const returns = [];
+      for (let i=1;i<n;i++) returns.push((closes[i]-closes[i-1]) / (closes[i-1] || 1));
+
+      const totalReturn = (closes[n-1]-closes[0]) / (closes[0] || 1);
+      const lookback5   = Math.max(0, n-6);
+      const shortReturn = (closes[n-1]-closes[lookback5]) / (closes[lookback5] || 1);
+
+      const win    = Math.min(20, n);
+      const recent = closes.slice(-win);
+      const sma    = qMean(recent);
+      const sd     = qStdev(recent) || 1e-6;
+      const zScore = (closes[n-1]-sma) / sd;
+
+      // Linear regression over the recent window → real trend strength (R²)
+      const xs = recent.map((_,i)=>i);
+      const xMean = qMean(xs), yMean = qMean(recent);
+      const covXY = qMean(xs.map((x,i)=>(x-xMean)*(recent[i]-yMean)));
+      const varX  = qMean(xs.map(x=>(x-xMean)**2)) || 1e-6;
+      const slope = covXY/varX;
+      const intercept = yMean - slope*xMean;
+      const predicted = xs.map(x=>slope*x+intercept);
+      const ssRes = qMean(xs.map((x,i)=>(recent[i]-predicted[i])**2));
+      const ssTot = qMean(recent.map(y=>(y-yMean)**2)) || 1e-6;
+      const rSquared = Math.max(0, Math.min(1, 1-ssRes/ssTot));
+
+      // Z-score velocity — is the mean-reversion pressure building or fading?
+      let zPrev = zScore;
+      if (n >= win+4) {
+        const prevWin = closes.slice(-(win+3), -3);
+        const smaP = qMean(prevWin), sdP = qStdev(prevWin) || 1e-6;
+        zPrev = (closes[n-4]-smaP)/sdP;
+      }
+      const zVelocity = zScore - zPrev;
+
+      const retStd = qStdev(returns) || 1e-6;
+      const annualizedVol = retStd * Math.sqrt(252);
+
+      const upBars = returns.filter(r=>r>0).length;
+      const trendConsistency = returns.length ? upBars/returns.length : 0.5;
+
+      const rangeSpan = (isFinite(data.fiftyTwoWeekHigh) && isFinite(data.fiftyTwoWeekLow)) ? (data.fiftyTwoWeekHigh-data.fiftyTwoWeekLow) : 0;
+      const rangePosition = rangeSpan > 0 ? (data.price-data.fiftyTwoWeekLow)/rangeSpan : 0.5;
+
+      const distToHigh = (isFinite(data.high) && data.high>0) ? (data.high-data.price)/data.high : 0;
+      const distToLow  = (isFinite(data.low)  && data.low>0)  ? (data.price-data.low)/data.low  : 0;
+
+      const volRatio = (isFinite(data.volRaw) && isFinite(data.avgVolRaw) && data.avgVolRaw>0) ? (data.volRaw/data.avgVolRaw) : 1;
+      const turnover  = (isFinite(data.volRaw) && isFinite(data.capRaw) && data.capRaw>0) ? (data.volRaw*data.price)/data.capRaw : 0;
+      const intradayReturn = (isFinite(data.open) && data.open>0) ? (data.price-data.open)/data.open : 0;
+
+      return { totalReturn, shortReturn, zScore, rSquared, zVelocity, annualizedVol, trendConsistency, rangePosition, distToHigh, distToLow, volRatio, turnover, intradayReturn };
+    };
+
     const refreshStatArb = () => {
+      const q = computeQuant();
+      if (!q) { setPcaData([]); setStatArbData([]); return; }
+
+      const trendScore = clamp10(q.rSquared * 10);
+      const consistencyScore = clamp10(q.trendConsistency * 10);
+      const intradayScore = clamp10(5 + q.intradayReturn * 300);
+
       const pcaList = [
-        { 
-          name: 'Principal Component 1', 
-          value: parseFloat((Math.random() * 2 + 7.5).toFixed(2)), 
-          meaning: 'Represents the primary market-wide factor or systemic risk. High scores indicate the asset is moving in strong synchronization with dominant institutional cash flows.',
-          rationale: `Analyzed Eigenvalue for the primary market factor. For ${ticker}, PC1 explains significant variance in systemic movement, aligning with broader institutional flow vectors.`
+        {
+          name: 'Trend Regression Fit (R²)',
+          value: parseFloat(trendScore.toFixed(2)),
+          meaning: 'How well a straight trendline explains the last 20 bars of price action. Computed via real linear regression — R² near 10 means the trend is clean; near 0 means price is choppy/directionless.',
+          rationale: `Linear regression over the last ${Math.min(20, data.history.length)} bars for ${ticker} yields R² = ${q.rSquared.toFixed(3)} (fit slope ${(q.rSquared>0.5?'confirms':'does not strongly confirm')} a stable directional trend). Recommendation: ${q.rSquared>0.6 ? 'trend-following entries are statistically better supported right now.' : 'avoid trend-following signals until the fit improves — price is likely range-bound.'}`
         },
-        { 
-          name: 'Principal Component 2', 
-          value: parseFloat((Math.random() * 3 + 5).toFixed(2)), 
-          meaning: 'Captures sector-specific orthogonal variance. High scores suggest the asset is exhibiting unique strength or weakness independent of the broad market trend.',
-          rationale: `Sectoral Eigenvector synthesis. Model identifies orthogonal variance in ${ticker}'s price relative to its primary industry peers, suggesting specific idiosyncratic strength.`
+        {
+          name: 'Directional Consistency',
+          value: parseFloat(consistencyScore.toFixed(2)),
+          meaning: 'Percentage of recent bars that closed higher than the previous bar. A real measure of how one-sided recent price action has been.',
+          rationale: `${(q.trendConsistency*100).toFixed(1)}% of the most recent bars for ${ticker} closed up vs. down. ${q.trendConsistency>0.6?'That is a fairly one-sided tape.':q.trendConsistency<0.4?'That is a fairly one-sided tape to the downside.':'That is close to a coin-flip — no dominant short-term direction.'} Recommendation: ${q.trendConsistency>0.6?'momentum continuation setups have better odds.':q.trendConsistency<0.4?'be cautious of catching a falling trend; wait for stabilization.':'size positions smaller until consistency improves.'}`
         },
-        { 
-          name: 'Eigenvector Alignment', 
-          value: parseFloat((Math.random() * 3 + 6).toFixed(2)), 
-          meaning: 'Quantifies the mathematical overlap between the asset and the market’s core component. Alignment scores above 7.0 confirm high trend stability.',
-          rationale: `Computed dot product between ${ticker}'s return vector and the dominant market component. Higher alignment suggests trend stability and systemic integration.`
+        {
+          name: 'Intraday Relative Strength',
+          value: parseFloat(intradayScore.toFixed(2)),
+          meaning: 'Current price versus today\'s open, scaled to a 0–10 read. Shows whether buyers or sellers are in control since the session began.',
+          rationale: `${ticker} is ${q.intradayReturn>=0?'up':'down'} ${Math.abs(q.intradayReturn*100).toFixed(2)}% from today's open ($${fmt(data.open)}) to the current $${fmt(data.price)}. Recommendation: ${Math.abs(q.intradayReturn)<0.003 ? 'no meaningful intraday edge yet — wait for a clearer move.' : q.intradayReturn>0 ? 'intraday buyers are in control; late shorts carry added risk.' : 'intraday sellers are in control; late longs carry added risk.'}`
         }
       ];
+
+      const zStretchScore = clamp10(Math.abs(q.zScore) * 2.2);
+      const residualScore = clamp10((1 - q.rSquared) * 10);
+      const velocityScore = clamp10(5 + q.zVelocity * 3);
+
       const arbList = [
-        { 
-          name: 'Mean Reversion Z-Score', 
-          value: parseFloat((Math.random() * 4 + 4).toFixed(2)), 
-          meaning: 'Measures the number of standard deviations the asset is from its mean component. High values indicate a significant pricing stretch and potential for correction.',
-          rationale: `Statistical distance from moving average. Current spread analysis for ${ticker} indicates potential regression toward the mean as the Z-Score deviates from historical variance bands.`
+        {
+          name: 'Mean Reversion Z-Score',
+          value: parseFloat(zStretchScore.toFixed(2)),
+          meaning: 'How many standard deviations the current price sits from its own 20-bar moving average. A real statistical distance, not a guess — larger values mean price is more stretched from its recent mean.',
+          rationale: `${ticker} is ${q.zScore>=0?'+':''}${q.zScore.toFixed(2)}σ away from its 20-bar average. Recommendation: ${Math.abs(q.zScore)>2 ? 'the price is statistically stretched — a reversion toward the mean is more likely than a continued extension, on a pure mean-reversion basis.' : 'price is within a normal statistical band; no strong reversion signal either way.'}`
         },
-        { 
-          name: 'Residual Variance', 
-          value: parseFloat((Math.random() * 2 + 3).toFixed(2)), 
-          meaning: 'Measures the idiosyncratic noise not explained by principal components. Low values (below 4.0) confirm high model accuracy and reliable arbitrage signals.',
-          rationale: `Analyzed non-systemic noise. Low residual variance for ${ticker} confirms the validity of the PCA model and the reliability of current arbitrage signals.`
+        {
+          name: 'Residual Variance',
+          value: parseFloat(residualScore.toFixed(2)),
+          meaning: 'Share of recent price movement NOT explained by the trendline (1 − R², scaled to 0–10). Lower is better: it means the recent trend model actually fits, so signals based on it are more trustworthy.',
+          rationale: `${(  (1-q.rSquared)*100 ).toFixed(1)}% of ${ticker}'s recent price variance is unexplained by the linear trend. Recommendation: ${q.rSquared>0.6 ? 'the trend model is reasonably reliable here.' : 'treat trend-based signals with caution — a large share of the move is noise.'}`
         },
-        { 
-          name: 'Spread Velocity', 
-          value: parseFloat((Math.random() * 5 + 3.5).toFixed(2)), 
-          meaning: 'Measures the speed at which the asset price is moving toward or away from its statistical pair equilibrium.',
-          rationale: `Velocity vector analysis for ${ticker}. Current metric suggests a high-acceleration spread narrowing, confirming the emergence of a high-probability arbitrage node.`
+        {
+          name: 'Z-Score Velocity',
+          value: parseFloat(velocityScore.toFixed(2)),
+          meaning: 'The rate of change of the mean-reversion Z-score itself — is the statistical stretch getting worse or better, bar over bar?',
+          rationale: `The Z-score for ${ticker} moved by ${q.zVelocity>=0?'+':''}${q.zVelocity.toFixed(2)}σ versus a few bars ago. Recommendation: ${Math.abs(q.zVelocity)>0.5 ? 'the reversion setup is actively strengthening — worth monitoring closely for an entry/exit trigger.' : 'the statistical stretch is roughly stable; no urgency to act on this signal alone.'}`
         }
       ];
+
       setPcaData(pcaList);
       setStatArbData(arbList);
     };
 
     const refreshFactors = () => {
+      const q = computeQuant();
+      const peNum = parseFloat(data.pe);
+      const betaNum = isFinite(data.beta) ? data.beta : 1;
+      const divYield = isFinite(data.dividendYield) ? data.dividendYield : 0;
+
+      const momentumScore = q ? clamp10(5 + q.totalReturn * 100 / 3) : 5;
+      const valueScore     = isFinite(peNum) ? clamp10(13 - peNum * 0.28) : 5;
+      const qualityScore   = clamp10(7 - Math.abs(betaNum - 1) * 3 + (divYield > 0 ? 1.5 : 0));
+      const lowVolScore    = q ? clamp10(10 - q.annualizedVol * 18) : 5;
+      const capLog         = isFinite(data.capRaw) && data.capRaw > 0 ? Math.log10(data.capRaw) : 9;
+      const sizeScore      = clamp10((capLog - 6) * 1.3);
+
       const list = [
-        { 
-          name: 'Momentum Factor', 
-          value: parseFloat((Math.random() * 4 + 6).toFixed(2)), 
+        {
+          name: 'Momentum Factor',
+          value: parseFloat(momentumScore.toFixed(2)),
           definition: 'Measures the tendency of an asset price to continue moving in its current direction.',
-          meaning: 'A quantitative measure of price acceleration. High scores suggest strong institutional conviction and a high probability of trend continuation.',
-          rationale: `AI Rationale: Analyzed 12-month relative strength vs benchmark. Model identifies strong price velocity in ${ticker}'s recent performance clusters, suggesting high institutional follow-through and trend persistence.`
+          meaning: 'Computed directly from the actual percentage price change across the currently selected chart window (not simulated).',
+          rationale: q
+            ? `${ticker} moved ${q.totalReturn>=0?'+':''}${(q.totalReturn*100).toFixed(2)}% over the visible ${activeRange} window. Recommendation: ${q.totalReturn>0.05 ? 'strong recent momentum — continuation setups favor the long side, but check for overbought stretch via the Mean Reversion Z-Score below.' : q.totalReturn < -0.05 ? 'weak recent momentum — continuation setups favor the short side.' : 'momentum is muted; this alone does not support a directional trade.'}`
+            : `Not enough price history loaded yet for ${ticker} to compute a reliable momentum read.`
         },
-        { 
-          name: 'Value Factor', 
-          value: parseFloat((Math.random() * 6 + 2).toFixed(2)), 
-          definition: 'Identifies stocks that are underpriced relative to their fundamental intrinsic value.',
-          meaning: 'Quantifies valuation attractiveness. High scores indicate the stock is trading at a significant discount to its intrinsic cash flow potential.',
-          rationale: `AI Rationale: Evaluated P/E and P/B ratios against sector averages. Quantitative analysis detects a significant valuation gap between ${ticker}'s current share price and projected cash flow yield, indicating a potential discount.`
+        {
+          name: 'Value Factor',
+          value: parseFloat(valueScore.toFixed(2)),
+          definition: 'Identifies stocks that are cheap or expensive relative to trailing earnings.',
+          meaning: 'Derived from the real trailing P/E ratio reported by Yahoo Finance. Lower P/E scores higher here — this is a simple heuristic, not a full DCF valuation.',
+          rationale: isFinite(peNum)
+            ? `${ticker}'s trailing P/E is ${peNum.toFixed(1)}. Recommendation: ${peNum < 15 ? 'this is on the cheaper end historically for equities — worth a closer fundamentals check before assuming it is undervalued (low P/E can also signal real risk).' : peNum > 30 ? 'this is a rich multiple — the market is pricing in significant future growth, which raises downside risk if results disappoint.' : 'this sits in a fairly typical range — valuation alone is neither a buy nor sell signal here.'}`
+            : `Yahoo Finance did not return a trailing P/E for ${ticker} (common for unprofitable companies or ETFs), so this factor defaults to neutral.`
         },
-        { 
-          name: 'Quality Factor', 
-          value: parseFloat((Math.random() * 3 + 7).toFixed(2)), 
-          definition: 'Focuses on companies with strong balance sheets, stable earnings, and high profitability.',
-          meaning: 'Measures operational and financial health. High scores confirm superior capital allocation and earnings stability, reducing systemic risk.',
-          rationale: `AI Rationale: Synthesized Return on Equity (ROE) and debt-to-equity metrics. Statistical verification of ${ticker}'s operational efficiency and balance sheet strength confirms high institutional-grade stability.`
+        {
+          name: 'Quality Factor',
+          value: parseFloat(qualityScore.toFixed(2)),
+          definition: 'Approximates balance-sheet stability using real beta and dividend data.',
+          meaning: 'Built from two real inputs: how far beta sits from 1.0 (market-average risk) and whether the company currently pays a dividend.',
+          rationale: `${ticker} has a beta of ${isFinite(data.beta)?data.beta.toFixed(2):'N/A'} ${divYield>0 ? `and pays a ${(divYield*100).toFixed(2)}% trailing dividend yield` : 'and currently pays no dividend'}. Recommendation: ${qualityScore>7 ? 'the risk/stability profile is comparatively defensive.' : qualityScore<4 ? 'this is a higher-beta, more volatile name — size positions accordingly.' : 'stability profile is unremarkable — neither notably defensive nor aggressive.'}`
         },
-        { 
-          name: 'Low Volatility', 
-          value: parseFloat((Math.random() * 5 + 3).toFixed(2)), 
-          definition: 'Targets stocks with lower-than-average price fluctuations for risk-adjusted returns.',
-          meaning: 'Measures return stability. High scores indicate a high resistance to market turbulence and lower exposure to beta-driven drawdowns.',
-          rationale: `AI Rationale: Computed Bayesian Variance clusters over a 120-day window. Model predicts stable price channels for ${ticker} with minimal exposure to broader market beta fluctuations.`
+        {
+          name: 'Low Volatility',
+          value: parseFloat(lowVolScore.toFixed(2)),
+          definition: 'Targets stocks with lower realized price fluctuation.',
+          meaning: 'Computed as the actual annualized standard deviation of daily returns over the loaded price history — a real, standard volatility measure.',
+          rationale: q
+            ? `${ticker}'s realized annualized volatility is ${(q.annualizedVol*100).toFixed(1)}%. Recommendation: ${q.annualizedVol<0.2 ? 'volatility is low — position sizing can reasonably be larger for a given risk budget.' : q.annualizedVol>0.45 ? 'volatility is elevated — reduce position size or widen stops to account for larger expected swings.' : 'volatility is moderate and roughly in line with a typical large-cap equity.'}`
+            : `Not enough price history loaded yet to compute realized volatility for ${ticker}.`
         },
-        { 
-          name: 'Size Factor', 
-          value: parseFloat((Math.random() * 4 + 4).toFixed(2)), 
-          definition: 'Exploits the historical tendency of smaller companies to outperform larger ones.',
-          meaning: 'Assesses market capitalization risk-premia. High scores suggest the asset is positioned in a size bracket with historical outperformance characteristics.',
-          rationale: `AI Rationale: Normalized market capitalization within the ${ticker} industry strata. Analysis identifies optimal positioning for capturing risk-premia associated with specific market-cap size constraints.`
+        {
+          name: 'Size Factor',
+          value: parseFloat(sizeScore.toFixed(2)),
+          definition: 'Reflects the real market-capitalization bracket the company falls into.',
+          meaning: 'Derived from the actual market cap reported by Yahoo Finance, log-scaled — larger, more liquid companies typically carry lower idiosyncratic risk but also lower small-cap risk premia.',
+          rationale: isFinite(data.capRaw)
+            ? `${ticker}'s market cap is approximately ${data.cap}. Recommendation: ${sizeScore>7 ? 'this is a mega/large-cap name — expect lower idiosyncratic volatility but also limited small-cap-style upside.' : sizeScore<4 ? 'this is a smaller-cap name — expect higher volatility and less analyst/liquidity coverage.' : 'this sits in a mid-cap range with a balanced risk/liquidity profile.'}`
+            : `Market cap for ${ticker} was not returned by the data feed, so this factor defaults to neutral.`
         }
       ];
       setFactors(list);
     };
 
     const refreshSentiment = () => {
-      const sources = [
-        { name: 'Bloomberg', domain: 'bloomberg.com' },
-        { name: 'Reuters', domain: 'reuters.com' },
-        { name: 'WSJ', domain: 'wsj.com' },
-        { name: 'Financial Times', domain: 'ft.com' },
-        { name: 'CNBC', domain: 'cnbc.com' },
-        { name: 'Forbes', domain: 'forbes.com' },
-        { name: 'Yahoo Finance', domain: 'finance.yahoo.com' },
-        { name: 'MarketWatch', domain: 'marketwatch.com' },
-        { name: 'The Economist', domain: 'economist.com' },
-        { name: 'Barron\'s', domain: 'barrons.com' },
-        { name: 'Investing.com', domain: 'investing.com' },
-        { name: 'Business Insider', domain: 'businessinsider.com' }
-      ];
-      
-      const getRationale = (s, score) => {
-        if (score > 8) return `AI Analysis: Strong bullish momentum detected for ${ticker}. Institutional flow data shows significant accumulation and positive quarterly guidance. Correlation with sector strength is high. Prediction: Outperform.`;
-        if (score > 6) return `AI Analysis: Moderate positive sentiment. ${s} reports highlight increasing market share for ${ticker} and stable revenue growth despite macro headwinds. Prediction: Steady climb.`;
-        if (score > 4) return `AI Analysis: Neutral outlook. Mixed signals in recent ${s} reports regarding ${ticker}'s global supply chain impact and consumer sentiment. Prediction: Consolidation.`;
-        return `AI Analysis: Bearish indicators identified. ${s} citing regulatory headwinds and declining demand in ${ticker}'s core segments. Technical resistance observed. Prediction: Underperform.`;
-      };
+      const q = computeQuant();
 
       setIsAnalyzing(true);
       setAnalysisTimeLeft(15);
-      
-      const picked = sources.sort(() => 0.5 - Math.random()).slice(0, 12);
-      const newSentiment = picked.map(s => {
-        const score = parseFloat((Math.random() * 10).toFixed(2));
-        return {
-          source: s.name,
-          link: `https://www.${s.domain}/search?query=${ticker}`,
-          score: score,
-          meaning: `Institutional sentiment derived from natural language processing of ${s.name} intelligence streams. A score of 10.0 represents maximum bullish conviction and institutional accumulation.`,
-          rationale: getRationale(s.name, score),
-          trend: Math.random() > 0.5 ? 'up' : 'down'
-        };
-      });
 
-      // Show initial results if list is empty
-      if (sentiment.length === 0) setSentiment(newSentiment);
+      const buildSentiment = () => {
+        if (!q) return [];
+        const rows = [
+          { label: 'Full-Window Momentum', raw: q.totalReturn, score: clamp10(5 + q.totalReturn*100/3),
+            meaning: `Actual total return of ${ticker} across the selected chart window.`,
+            rationale: `${ticker} is ${q.totalReturn>=0?'up':'down'} ${Math.abs(q.totalReturn*100).toFixed(2)}% over the visible window. ${q.totalReturn>0.03?'Recommendation: trend continuation bias to the upside.':q.totalReturn<-0.03?'Recommendation: trend continuation bias to the downside.':'Recommendation: no clear directional edge from this window alone.'}` },
+          { label: 'Short-Term Momentum', raw: q.shortReturn, score: clamp10(5 + q.shortReturn*100/2),
+            meaning: 'Return over the most recent handful of bars — a faster-moving momentum read.',
+            rationale: `The last few bars show a ${q.shortReturn>=0?'+':''}${(q.shortReturn*100).toFixed(2)}% move. Recommendation: ${Math.abs(q.shortReturn)>0.02 ? 'short-term momentum is accelerating — good for tactical entries, higher whipsaw risk.' : 'short-term momentum is flat — better suited to range strategies than breakout chasing.'}` },
+          { label: 'Trend Strength (R²)', raw: q.rSquared, score: clamp10(q.rSquared*10),
+            meaning: 'Goodness-of-fit of a linear trendline to the recent price series.',
+            rationale: `R² = ${q.rSquared.toFixed(3)} over the recent window. Recommendation: ${q.rSquared>0.6 ? 'the trend is clean enough to trust trend-following signals.' : 'price is choppy — trend-following signals are less reliable right now.'}` },
+          { label: 'Volatility Regime', raw: q.annualizedVol, score: clamp10(10 - q.annualizedVol*18),
+            meaning: 'Real annualized volatility computed from daily returns.',
+            rationale: `Annualized realized volatility is ${(q.annualizedVol*100).toFixed(1)}%. Recommendation: ${q.annualizedVol>0.45 ? 'reduce size / widen stops given elevated volatility.' : 'volatility is manageable for standard position sizing.'}` },
+          { label: 'Volume Pressure', raw: q.volRatio, score: clamp10(5 + (q.volRatio-1)*5),
+            meaning: 'Current volume versus the 3-month average daily volume.',
+            rationale: `Volume is running at ${(q.volRatio*100).toFixed(0)}% of the 3-month average. Recommendation: ${q.volRatio>1.3 ? 'above-average participation — moves today carry more conviction.' : q.volRatio<0.7 ? 'below-average participation — be skeptical of large price moves on thin volume.' : 'participation is roughly normal.'}` },
+          { label: '52-Week Range Position', raw: q.rangePosition, score: clamp10(q.rangePosition*10),
+            meaning: 'Where the current price sits within its real 52-week high/low range.',
+            rationale: `Price sits at ${(q.rangePosition*100).toFixed(1)}% of its 52-week range ($${fmt(data.fiftyTwoWeekLow)}–$${fmt(data.fiftyTwoWeekHigh)}). Recommendation: ${q.rangePosition>0.85 ? 'near 52-week highs — watch for resistance and potential profit-taking.' : q.rangePosition<0.15 ? 'near 52-week lows — watch for support or further downside continuation.' : 'sits in the middle of its annual range — no extreme in either direction.'}` },
+          { label: 'Mean Reversion Pressure', raw: q.zScore, score: clamp10(Math.abs(q.zScore)*2.2),
+            meaning: 'Standard deviations from the 20-bar moving average.',
+            rationale: `Z-score is ${q.zScore>=0?'+':''}${q.zScore.toFixed(2)}σ. Recommendation: ${Math.abs(q.zScore)>2 ? 'statistically stretched — a pullback toward the mean is more likely on a pure mean-reversion basis.' : 'within a normal statistical band.'}` },
+          { label: 'Directional Consistency', raw: q.trendConsistency, score: clamp10(q.trendConsistency*10),
+            meaning: 'Share of recent bars that closed higher than the prior bar.',
+            rationale: `${(q.trendConsistency*100).toFixed(1)}% of recent bars closed up. Recommendation: ${q.trendConsistency>0.6 ? 'fairly one-sided upside tape — momentum continuation favored.' : q.trendConsistency<0.4 ? 'fairly one-sided downside tape — caution on the long side.' : 'close to a coin-flip; no dominant short-term direction.'}` },
+          { label: 'Distance to Session High', raw: q.distToHigh, score: clamp10(10 - q.distToHigh*40),
+            meaning: 'How close the current price is to today\'s intraday high.',
+            rationale: `Price is ${(q.distToHigh*100).toFixed(2)}% below today's high of $${fmt(data.high)}. Recommendation: ${q.distToHigh<0.005 ? 'trading right at the highs — momentum traders may watch for a breakout continuation.' : 'some room below today\'s high.'}` },
+          { label: 'Distance to Session Low', raw: q.distToLow, score: clamp10(10 - q.distToLow*40),
+            meaning: 'How close the current price is to today\'s intraday low.',
+            rationale: `Price is ${(q.distToLow*100).toFixed(2)}% above today's low of $${fmt(data.low)}. Recommendation: ${q.distToLow<0.005 ? 'trading right at the lows — watch for either a bounce or further breakdown.' : 'some cushion above today\'s low.'}` },
+          { label: 'Turnover Ratio', raw: q.turnover, score: clamp10(q.turnover*400),
+            meaning: 'Dollar volume traded today as a share of total market cap — a real liquidity measure.',
+            rationale: `Roughly ${(q.turnover*100).toFixed(3)}% of ${ticker}'s market cap traded hands today. Recommendation: ${q.turnover>0.01 ? 'unusually high turnover — often accompanies news-driven moves, worth checking for a catalyst.' : 'turnover looks routine for a name this size.'}` },
+          { label: 'Intraday Relative Strength', raw: q.intradayReturn, score: clamp10(5 + q.intradayReturn*300),
+            meaning: 'Current price versus today\'s open.',
+            rationale: `${ticker} is ${q.intradayReturn>=0?'up':'down'} ${Math.abs(q.intradayReturn*100).toFixed(2)}% from today's open. Recommendation: ${Math.abs(q.intradayReturn)<0.003 ? 'no meaningful intraday edge yet.' : q.intradayReturn>0 ? 'intraday buyers currently in control.' : 'intraday sellers currently in control.'}` },
+        ];
+        return rows.map(r => ({
+          source: r.label,
+          link: `https://finance.yahoo.com/quote/${ticker}`,
+          score: parseFloat(r.score.toFixed(2)),
+          meaning: r.meaning,
+          rationale: r.rationale,
+          trend: r.raw >= 0 ? 'up' : 'down'
+        }));
+      };
+
+      const newSentiment = buildSentiment();
+
+      // Show initial results immediately so the panel isn't empty on first load
+      if (sentiment.length === 0 && newSentiment.length) setSentiment(newSentiment);
 
       const countdown = setInterval(() => {
         setAnalysisTimeLeft(prev => {
@@ -3548,9 +3671,9 @@
             clearInterval(countdown);
             setIsAnalyzing(false);
             setTimeUntilUpdate(15); // Reset cycle
-            setSentiment(newSentiment); // Update sentiment after recalibration
-            refreshFactors(); // Update factor analysis
-            refreshStatArb(); // Update StatArb/PCA analysis
+            setSentiment(buildSentiment()); // Recompute against the latest live price/volume data
+            refreshFactors(); // Recompute factor analysis
+            refreshStatArb(); // Recompute StatArb-style analysis
             return 0;
           }
           return prev - 1;
