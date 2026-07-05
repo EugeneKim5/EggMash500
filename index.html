@@ -3247,22 +3247,59 @@
       fetchTicker(ticker, companyName, r);
     };
 
-    // ── LIVE TICK — gentle random walk ───────────────────────────
+    // ── LIVE TICK — real re-fetch from Yahoo Finance quote endpoint ─────
     useEffect(() => {
-      const iv = setInterval(() => {
-        if (isLoading) return;
-        setData(d => {
-          if (!d.history.length) return d;
-          const last  = d.history[d.history.length-1];
-          const sigma = last.price * 0.00035;
-          const next  = Math.max(0.001, last.price + (Math.random()-0.498)*sigma*2);
-          const hist  = [...d.history.slice(1), {...last, time:last.time+1, price:next}];
-          const base  = hist[0].price;
-          return {...d, price:next, change:next-base, changePercent:base?(next-base)/base*100:0, history:hist};
-        });
-      }, 3000);
-      return () => clearInterval(iv);
-    }, [isLoading]);
+      let cancelled = false;
+      const liveFetchingRef = { current: false };
+
+      const fetchLivePrice = async () => {
+        // Skip if a full chart fetch or another live tick is already in flight
+        if (liveFetchingRef.current || fetchingRef.current) return;
+        liveFetchingRef.current = true;
+        try {
+          const SYM = ticker.trim().toUpperCase();
+          // Lightweight quote endpoint — far smaller payload than the chart
+          // endpoint, so it round-trips through the CORS proxy much faster.
+          const url  = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${SYM}`;
+          const text = await proxyFetch(url);
+          const json = JSON.parse(text);
+          const q    = json?.quoteResponse?.result?.[0];
+          if (q && !cancelled && isFinite(q.regularMarketPrice)) {
+            const curPrice  = q.regularMarketPrice;
+            const prevClose = isFinite(q.regularMarketPreviousClose) ? q.regularMarketPreviousClose : curPrice;
+            const change    = curPrice - prevClose;
+            setData(d => {
+              if (!d.history.length) return d;
+              const last = d.history[d.history.length - 1];
+              const hist = [...d.history.slice(1), {
+                ...last, time: last.time + 1, price: curPrice,
+                high: Math.max(last.high ?? curPrice, curPrice),
+                low:  Math.min(last.low  ?? curPrice, curPrice),
+              }];
+              return {
+                ...d,
+                price: curPrice,
+                change,
+                changePercent: prevClose ? (change / prevClose) * 100 : 0,
+                high: isFinite(q.regularMarketDayHigh) ? q.regularMarketDayHigh : d.high,
+                low:  isFinite(q.regularMarketDayLow)  ? q.regularMarketDayLow  : d.low,
+                vol:  isFinite(q.regularMarketVolume)  ? fmtVol(q.regularMarketVolume) : d.vol,
+                bid:  isFinite(q.bid) ? q.bid : d.bid,
+                ask:  isFinite(q.ask) ? q.ask : d.ask,
+                history: hist,
+              };
+            });
+          }
+        } catch (err) {
+          console.warn('fetchLivePrice:', err.message);
+        }
+        liveFetchingRef.current = false;
+      };
+
+      fetchLivePrice(); // kick off immediately on mount / ticker change
+      const iv = setInterval(() => { if (!isLoading) fetchLivePrice(); }, 2000);
+      return () => { cancelled = true; clearInterval(iv); };
+    }, [ticker, isLoading]);
 
     // ── CHART MATH ───────────────────────────────────────────────
     const prices    = useMemo(() => data.history.map(d=>d.price).filter(isFinite), [data.history]);
