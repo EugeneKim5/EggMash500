@@ -3025,6 +3025,7 @@
       previousClose: 187.50, bid: 189.20, ask: 189.40,
       fiftyTwoWeekLow: 124.17, fiftyTwoWeekHigh: 198.23,
       beta: 1.23, dividendYield: 0.0052,
+      marketState: 'REGULAR',
       history: Array.from({length: 90}, (_, i) => {
         const p = 185 + Math.sin(i/14)*4 + Math.sin(i/5)*1.2 + i*0.04 + Math.random()*0.8;
         return {time: i, price: p, high: p+0.4, low: p-0.4, open: p-0.1};
@@ -3229,6 +3230,7 @@
           fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh ?? NaN,
           beta: meta.beta ?? NaN,
           dividendYield: meta.trailingAnnualDividendYield ?? NaN,
+          marketState: meta.marketState || 'REGULAR',
           history,
         });
       } catch (err) {
@@ -3286,6 +3288,7 @@
                 vol:  isFinite(q.regularMarketVolume)  ? fmtVol(q.regularMarketVolume) : d.vol,
                 bid:  isFinite(q.bid) ? q.bid : d.bid,
                 ask:  isFinite(q.ask) ? q.ask : d.ask,
+                marketState: q.marketState || d.marketState,
                 history: hist,
               };
             });
@@ -3321,6 +3324,18 @@
 
     const isGreen  = data.change >= 0;
     const lineClr  = isGreen ? '#22c55e' : '#ef4444';
+
+    // ── SESSION STATUS — themed pre-market / after-hours / closed note ──
+    const marketStatusInfo = useMemo(() => {
+      const state = data.marketState || 'REGULAR';
+      const map = {
+        PRE:      { short: 'Pre-Market', sub: 'Early cracking underway',      colorVar: 'var(--color-brand-yellow, #facc15)' },
+        POST:     { short: 'After-Hours', sub: 'Yolk still settling',         colorVar: 'var(--color-brand-yellow, #facc15)' },
+        POSTPOST: { short: 'After-Hours', sub: 'Yolk still settling',         colorVar: 'var(--color-brand-yellow, #facc15)' },
+        CLOSED:   { short: 'Coop Closed', sub: 'No fresh shells until open',  colorVar: 'var(--color-brand-red, #ef4444)' },
+      };
+      return map[state] || null;
+    }, [data.marketState]);
 
     const yTicks = useMemo(()=>Array.from({length:5},(_,i)=>{
       const p=maxP-pRange*(i/4); return {p, y:toY(p)};
@@ -3926,6 +3941,26 @@
                     )
                   )
                 )
+              )
+            ),
+            // Session status — themed note when outside regular trading hours
+            marketStatusInfo && !isLoading && e('div',{
+              className: 'hud-panel',
+              style:{
+                position:'absolute', top:10, left:10, zIndex:16,
+                display:'flex', alignItems:'center', gap:'0.65rem',
+                padding:'0.55rem 0.85rem',
+                borderColor: `${marketStatusInfo.colorVar}55`,
+                background:'rgba(7,12,30,0.86)',
+                boxShadow:`0 0 18px ${marketStatusInfo.colorVar}22, inset 0 0 0 1px rgba(255,255,255,0.06)`,
+                pointerEvents:'none',
+                fontSize:'0.68rem',
+              }
+            },
+              e('div',{style:{width:7,height:7,borderRadius:'50%',flexShrink:0,background:marketStatusInfo.colorVar,boxShadow:`0 0 8px ${marketStatusInfo.colorVar}`,animation:'status-pulse 1.4s ease-in-out infinite'}}),
+              e('div',{},
+                e('span',{style:{display:'block',fontSize:9,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:marketStatusInfo.colorVar,fontFamily:'"Inter",sans-serif'}}, marketStatusInfo.short),
+                e('span',{style:{display:'block',fontSize:8,fontWeight:600,letterSpacing:'0.04em',color:'rgba(203,213,225,0.7)',fontFamily:'"Inter",sans-serif',marginTop:2}}, marketStatusInfo.sub)
               )
             ),
             // Loading overlay — Lottie, fixed position, fades in/out
