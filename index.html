@@ -1919,6 +1919,31 @@
   const loaderStatus   = document.getElementById('loader-status');
   const loaderLog      = document.getElementById('loader-log');
   const loaderTilt     = document.getElementById('loader-tilt-container');
+
+  // Auto-fit the loader status text so long messages stay on one line
+  // instead of being clipped by the ellipsis overflow rule.
+  const LOADER_STATUS_MAX_FONT = 24; // px, matches text-2xl
+  const LOADER_STATUS_MIN_FONT = 12; // px, floor before we'd otherwise truncate
+  function fitLoaderStatus() {
+    if (!loaderStatus) return;
+    // loaderStatus is a block element that already fills its parent's
+    // content box (padding excluded), so its own clientWidth is the
+    // true available width for the text — using the parent's clientWidth
+    // instead overestimates by the parent's horizontal padding and lets
+    // long strings keep getting ellipsis-clipped.
+    let fontSize = LOADER_STATUS_MAX_FONT;
+    loaderStatus.style.fontSize = fontSize + 'px';
+    const available = loaderStatus.clientWidth;
+    while (loaderStatus.scrollWidth > available && fontSize > LOADER_STATUS_MIN_FONT) {
+      fontSize -= 1;
+      loaderStatus.style.fontSize = fontSize + 'px';
+    }
+  }
+  function setLoaderStatus(text) {
+    loaderStatus.textContent = text;
+    fitLoaderStatus();
+  }
+  window.addEventListener('resize', () => { if (isLoading) fitLoaderStatus(); });
   const eggDropdown    = document.getElementById('egg-dropdown');
   const eggLoginBtn    = document.getElementById('egg-login-btn');
   const eggSignupBtn   = document.getElementById('egg-signup-btn');
@@ -2022,21 +2047,21 @@
   function setLoaderVariant(mode) {
     currentLoaderMode = mode || 'default';
     if (mode === 'login') {
-      loaderStatus.textContent = 'EGG VALIDATION IN PROGRESS...';
+      setLoaderStatus('EGG VALIDATION IN PROGRESS...');
       loaderLog.innerHTML = `
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Verifying yolk cryptography...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Aligning shell fragments...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Deploying hatchery access keys...</div>
       `;
     } else if (mode === 'day-transition') {
-      loaderStatus.textContent = 'SOLAR GATEWAY EXPANDING...';
+      setLoaderStatus('SOLAR GATEWAY EXPANDING...');
       loaderLog.innerHTML = `
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Harvesting photon energy...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Recalibrating daytime logic...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Waking up the roosters...</div>
       `;
     } else if (mode === 'signout') {
-      loaderStatus.textContent = 'UNLINKING SESSION...';
+      setLoaderStatus('UNLINKING SESSION...');
       loaderLog.innerHTML = `
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Closing solar gateway...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Securing eggshell perimeter...</div>
@@ -2044,17 +2069,17 @@
       `;
     } else if (mode === 'theme-transition') {
       const targetTheme = window.nextTheme || 'Cyber Yolk';
-      loaderStatus.textContent = `LOADING HUES: ${targetTheme.toUpperCase()}...`;
+      setLoaderStatus(`LOADING HUES: ${targetTheme.toUpperCase()}...`);
       loaderLog.innerHTML = `
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Calibrating prism alignment...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Buffering visual assets...</div>
         <div class="loader-log-entry h-[20px] flex items-center justify-center">Applying CSS variables...</div>
       `;
     } else if (mode === 'auth') {
-      loaderStatus.textContent = 'ACCESSING MARKET...';
+      setLoaderStatus('ACCESSING MARKET...');
       loaderLog.innerHTML = `<div class="loader-log-entry h-[20px] flex items-center justify-center">Checking secure credentials...</div>`;
     } else {
-      loaderStatus.textContent = 'BOOTING...';
+      setLoaderStatus('BOOTING...');
       loaderLog.innerHTML = `<div class="loader-log-entry h-[20px] flex items-center justify-center">${isDayMode ? 'Scanning for sunflowers...' : 'Searching for eggs...'}</div>`;
     }
   }
@@ -2107,10 +2132,10 @@
         loaderLog.style.transform = `translateY(-${logIndex * 20}px)`;
         logIndex++;
       }
-      if (progress > 25 && progress < 30) loaderStatus.textContent = activeStatus[0];
-      if (progress > 50 && progress < 55) loaderStatus.textContent = activeStatus[1];
-      if (progress > 75 && progress < 80) loaderStatus.textContent = activeStatus[2];
-      if (progress > 95) loaderStatus.textContent = activeStatus[3];
+      if (progress > 25 && progress < 30) setLoaderStatus(activeStatus[0]);
+      if (progress > 50 && progress < 55) setLoaderStatus(activeStatus[1]);
+      if (progress > 75 && progress < 80) setLoaderStatus(activeStatus[2]);
+      if (progress > 95) setLoaderStatus(activeStatus[3]);
       if (progress >= 100) {
         clearInterval(interval);
         setTimeout(() => {
