@@ -2939,10 +2939,22 @@
      Used by StatArb/PCA, Microstructure (OFI/VPIN) and Regime
      Detection (HMM/GARCH) sections — anywhere a time-series is the
      natural way to *observe* the signal rather than a single score. */
-  const MicroChart = React.memo(({ points, valueKeys, colors, height=112, zeroLine=false, bandKeys=null, bandColor='rgba(250,204,21,0.14)', xLabel, tooltipRows, pointColorKey=null, accent='#facc15', emptyLabel='Not enough data yet' }) => {
+  const MAX_CHART_POINTS = 42;
+  const downsampleSeries = (points, max = MAX_CHART_POINTS) => {
+    if (points.length <= max) return points;
+    const step = (points.length - 1) / (max - 1);
+    const out = [];
+    for (let i = 0; i < max; i++) out.push(points[Math.round(i * step)]);
+    return out;
+  };
+
+  const MicroChart = React.memo(({ points: rawPoints, valueKeys, colors, height=150, zeroLine=false, bandKeys=null, bandColor='rgba(250,204,21,0.14)', xLabel, yFormat, tooltipRows, pointColorKey=null, accent='#facc15', emptyLabel='Not enough data yet' }) => {
     const ref = useRef(null);
     const [hoverIdx, setHoverIdx] = useState(null);
+    const points = useMemo(() => downsampleSeries(rawPoints), [rawPoints]);
     const W = 1000, H = height;
+    const PL = 8, PR = 8, PT = 16, PB = 24;
+    const plotW = W - PL - PR, plotH = H - PT - PB;
     const n = points.length;
 
     const { minV, maxV } = useMemo(() => {
@@ -2956,9 +2968,10 @@
       return { minV: Math.min(...vals), maxV: Math.max(...vals) };
     }, [points]);
     const range = (maxV - minV) || 1;
-    const pad = range * 0.12;
-    const toX = i => n > 1 ? (i / (n - 1)) * W : W / 2;
-    const toY = v => H - 10 - ((v - (minV - pad)) / (range + pad * 2)) * (H - 20);
+    const pad = range * 0.15;
+    const loV = minV - pad, hiV = maxV + pad, vRange = (hiV - loV) || 1;
+    const toX = i => n > 1 ? PL + (i / (n - 1)) * plotW : PL + plotW / 2;
+    const toY = v => PT + plotH - ((v - loV) / vRange) * plotH;
 
     const buildPath = key => n < 2 ? '' : points.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(p[key]).toFixed(1)}`).join(' ');
     const buildBandPath = () => {
@@ -2972,107 +2985,139 @@
       if (!ref.current || n === 0) return;
       const rect = ref.current.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
-      setHoverIdx(Math.round(ratio * (n - 1)));
+      const idxRatio = Math.max(0, Math.min(1, (ratio * W - PL) / plotW));
+      setHoverIdx(Math.round(idxRatio * (n - 1)));
     };
 
     const hp = hoverIdx != null ? points[hoverIdx] : null;
     const hoverXPct = hoverIdx != null ? (toX(hoverIdx) / W) * 100 : 0;
+    const fy = v => yFormat ? yFormat(v) : v.toFixed(1);
+    const gridVals = [hiV, (hiV + loV) / 2, loV];
 
     if (n < 2) return e('div', { style: { height, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
       e('span', { className: 'text-[9px] font-bold text-slate-600 uppercase tracking-widest' }, emptyLabel)
     );
 
-    return e('div', { style: { position: 'relative' } },
-      e('div', {
-        ref, onMouseMove: onMove, onMouseLeave: () => setHoverIdx(null),
-        style: { height, cursor: 'crosshair', position: 'relative' }
-      },
-        e('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: '100%', preserveAspectRatio: 'none', style: { display: 'block', overflow: 'visible' } },
-          zeroLine && e('line', { x1: 0, y1: toY(0), x2: W, y2: toY(0), stroke: 'rgba(255,255,255,0.16)', strokeWidth: 1, strokeDasharray: '5 4' }),
-          bandKeys && e('path', { d: buildBandPath(), fill: bandColor, stroke: 'none' }),
-          ...valueKeys.map((k, ki) => e('path', {
-            key: k, d: buildPath(k), fill: 'none', stroke: colors[ki] || accent, strokeWidth: 2.2,
-            strokeLinecap: 'round', strokeLinejoin: 'round',
-            style: { filter: `drop-shadow(0 0 6px ${(colors[ki] || accent)}55)` }
-          })),
-          pointColorKey && points.map((p, i) => e('circle', { key: 'pc' + i, cx: toX(i), cy: toY(p[valueKeys[0]]), r: 2, fill: p[pointColorKey] || accent, opacity: 0.85 })),
-          hoverIdx != null && e('line', { x1: toX(hoverIdx), y1: 0, x2: toX(hoverIdx), y2: H, stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }),
-          hoverIdx != null && valueKeys.map((k, ki) => e('circle', { key: 'hd' + k, cx: toX(hoverIdx), cy: toY(hp[k]), r: 4.2, fill: '#050816', stroke: colors[ki] || accent, strokeWidth: 2.2 }))
-        ),
-        hp && e('div', {
-          style: {
-            position: 'absolute', top: 4, zIndex: 20, pointerEvents: 'none',
-            ...(hoverXPct > 60 ? { right: `calc(${100 - hoverXPct}% + 8px)` } : { left: `calc(${hoverXPct}% + 8px)` })
-          }
+    return e('div', { style: { display: 'flex', gap: 8, height } },
+      // Y-axis label gutter — fixed width, keeps labels off the plot entirely
+      e('div', { style: { position: 'relative', width: 34, flexShrink: 0 } },
+        gridVals.map((gv, gi) => e('span', { key: 'gt' + gi, style: { position: 'absolute', right: 0, top: `calc(${(toY(gv) / H) * 100}% - 7px)`, fontSize: 9, color: 'rgba(100,116,139,0.6)', fontWeight: 700, fontFamily: 'Inter,monospace', whiteSpace: 'nowrap' } }, fy(gv)))
+      ),
+      // Plot area
+      e('div', { style: { position: 'relative', flex: 1, minWidth: 0 } },
+        e('div', {
+          ref, onMouseMove: onMove, onMouseLeave: () => setHoverIdx(null),
+          style: { height, cursor: 'crosshair', position: 'relative' }
         },
-          e('div', { style: { background: 'rgba(6,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 11px', minWidth: 138, backdropFilter: 'blur(12px)' } },
-            e('div', { style: { fontSize: 8, color: 'rgba(100,116,139,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 6, fontFamily: '"Inter",sans-serif' } }, xLabel ? xLabel(hp) : ''),
-            tooltipRows(hp).map(([lbl, val, c], ri) => e('div', { key: ri, style: { display: 'flex', justifyContent: 'space-between', gap: 14, marginBottom: 2 } },
-              e('span', { style: { fontSize: 8, color: 'rgba(148,163,184,0.6)', fontWeight: 600, fontFamily: '"Inter",sans-serif' } }, lbl),
-              e('span', { style: { fontSize: 10, color: c || '#fff', fontWeight: 800, fontFamily: '"Inter",sans-serif', fontVariantNumeric: 'tabular-nums' } }, val)
-            ))
+          e('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: '100%', preserveAspectRatio: 'none', style: { display: 'block', overflow: 'visible' } },
+            gridVals.map((gv, gi) => e('line', { key: 'gl' + gi, x1: PL, y1: toY(gv), x2: W - PR, y2: toY(gv), stroke: 'rgba(255,255,255,0.05)', strokeWidth: 1 })),
+            zeroLine && e('line', { x1: PL, y1: toY(0), x2: W - PR, y2: toY(0), stroke: 'rgba(255,255,255,0.18)', strokeWidth: 1.2, strokeDasharray: '5 4' }),
+            bandKeys && e('path', { d: buildBandPath(), fill: bandColor, stroke: 'none' }),
+            ...valueKeys.map((k, ki) => e('path', {
+              key: k, d: buildPath(k), fill: 'none', stroke: colors[ki] || accent, strokeWidth: 2.2,
+              strokeLinecap: 'round', strokeLinejoin: 'round',
+              style: { filter: `drop-shadow(0 0 6px ${(colors[ki] || accent)}55)` }
+            })),
+            pointColorKey && points.map((p, i) => e('circle', { key: 'pc' + i, cx: toX(i), cy: toY(p[valueKeys[0]]), r: 3, fill: p[pointColorKey] || accent, opacity: 0.9 })),
+            hoverIdx != null && e('line', { x1: toX(hoverIdx), y1: PT, x2: toX(hoverIdx), y2: H - PB, stroke: 'rgba(255,255,255,0.22)', strokeWidth: 1 }),
+            hoverIdx != null && valueKeys.map((k, ki) => e('circle', { key: 'hd' + k, cx: toX(hoverIdx), cy: toY(hp[k]), r: 5, fill: '#050816', stroke: colors[ki] || accent, strokeWidth: 2.4 }))
+          ),
+          // X-axis start/end labels
+          xLabel && n > 1 && e('span', { style: { position: 'absolute', left: 0, bottom: 2, fontSize: 9, color: 'rgba(100,116,139,0.5)', fontWeight: 600, fontFamily: 'Inter,sans-serif', pointerEvents: 'none' } }, xLabel(points[0])),
+          xLabel && n > 1 && e('span', { style: { position: 'absolute', right: 0, bottom: 2, fontSize: 9, color: 'rgba(100,116,139,0.5)', fontWeight: 600, fontFamily: 'Inter,sans-serif', pointerEvents: 'none' } }, xLabel(points[n - 1])),
+          hp && e('div', {
+            style: {
+              position: 'absolute', top: 4, zIndex: 20, pointerEvents: 'none',
+              ...(hoverXPct > 60 ? { right: `calc(${100 - hoverXPct}% + 8px)` } : { left: `calc(${hoverXPct}% + 8px)` })
+            }
+          },
+            e('div', { style: { background: 'rgba(6,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 11px', minWidth: 138, backdropFilter: 'blur(12px)' } },
+              e('div', { style: { fontSize: 8, color: 'rgba(100,116,139,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 6, fontFamily: '"Inter",sans-serif' } }, xLabel ? xLabel(hp) : ''),
+              tooltipRows(hp).map(([lbl, val, c], ri) => e('div', { key: ri, style: { display: 'flex', justifyContent: 'space-between', gap: 14, marginBottom: 2 } },
+                e('span', { style: { fontSize: 8, color: 'rgba(148,163,184,0.6)', fontWeight: 600, fontFamily: '"Inter",sans-serif' } }, lbl),
+                e('span', { style: { fontSize: 10, color: c || '#fff', fontWeight: 800, fontFamily: '"Inter",sans-serif', fontVariantNumeric: 'tabular-nums' } }, val)
+              ))
+            )
           )
         )
       )
     );
   });
 
-  const MicroBarChart = React.memo(({ points, valueKey, colorFor, height=112, xLabel, tooltipRows, emptyLabel='Not enough data yet' }) => {
+  const MicroBarChart = React.memo(({ points: rawPoints, valueKey, colorFor, height=150, xLabel, yFormat, tooltipRows, emptyLabel='Not enough data yet' }) => {
     const ref = useRef(null);
     const [hoverIdx, setHoverIdx] = useState(null);
+    const points = useMemo(() => downsampleSeries(rawPoints, 24), [rawPoints]);
     const W = 1000, H = height;
+    const PL = 8, PR = 8, PT = 16, PB = 24;
+    const plotW = W - PL - PR, plotH = H - PT - PB;
     const n = points.length;
-    const maxV = n ? Math.max(...points.map(p => p[valueKey]), 1e-6) : 1;
+    const maxV = n ? Math.max(...points.map(p => p[valueKey]), 1e-6) * 1.15 : 1;
 
-    const gap = 3;
-    const barW = n ? (W / n) - gap : 0;
-    const toY = v => H - 10 - (v / maxV) * (H - 20);
+    const slot = plotW / Math.max(1, n);
+    const gap = Math.min(10, slot * 0.28);
+    const barW = Math.max(2, slot - gap);
+    const toY = v => PT + plotH - (v / maxV) * plotH;
 
     const onMove = ev => {
       if (!ref.current || n === 0) return;
       const rect = ref.current.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
-      setHoverIdx(Math.min(n - 1, Math.floor(ratio * n)));
+      const idxRatio = Math.max(0, Math.min(0.9999, (ratio * W - PL) / plotW));
+      setHoverIdx(Math.min(n - 1, Math.floor(idxRatio * n)));
     };
 
     const hp = hoverIdx != null ? points[hoverIdx] : null;
-    const hoverXPct = hoverIdx != null ? ((hoverIdx + 0.5) / n) * 100 : 0;
+    const hoverXPct = hoverIdx != null ? ((PL + (hoverIdx + 0.5) * slot) / W) * 100 : 0;
+    const fy = v => yFormat ? yFormat(v) : v.toFixed(1);
+    const gridVals = [maxV, maxV / 2, 0];
 
     if (n < 2) return e('div', { style: { height, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
       e('span', { className: 'text-[9px] font-bold text-slate-600 uppercase tracking-widest' }, emptyLabel)
     );
 
-    return e('div', { style: { position: 'relative' } },
-      e('div', {
-        ref, onMouseMove: onMove, onMouseLeave: () => setHoverIdx(null),
-        style: { height, cursor: 'crosshair', position: 'relative' }
-      },
-        e('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: '100%', preserveAspectRatio: 'none', style: { display: 'block', overflow: 'visible' } },
-          points.map((p, i) => {
-            const x = i * (W / n) + gap / 2;
-            const y = toY(p[valueKey]);
-            const clr = colorFor(p);
-            const isHover = i === hoverIdx;
-            return e('rect', {
-              key: i, x, y, width: Math.max(1, barW), height: Math.max(1, H - 10 - y),
-              fill: clr, opacity: isHover ? 1 : 0.72, rx: 2,
-              style: isHover ? { filter: `drop-shadow(0 0 8px ${clr}88)` } : undefined
-            });
-          }),
-          hoverIdx != null && e('line', { x1: (hoverIdx + 0.5) * (W / n), y1: 0, x2: (hoverIdx + 0.5) * (W / n), y2: H, stroke: 'rgba(255,255,255,0.12)', strokeWidth: 1 })
-        ),
-        hp && e('div', {
-          style: {
-            position: 'absolute', top: 4, zIndex: 20, pointerEvents: 'none',
-            ...(hoverXPct > 60 ? { right: `calc(${100 - hoverXPct}% + 8px)` } : { left: `calc(${hoverXPct}% + 8px)` })
-          }
+    return e('div', { style: { display: 'flex', gap: 8, height } },
+      // Y-axis label gutter — fixed width, keeps labels off the plot entirely
+      e('div', { style: { position: 'relative', width: 34, flexShrink: 0 } },
+        gridVals.map((gv, gi) => e('span', { key: 'gt' + gi, style: { position: 'absolute', right: 0, top: `calc(${(toY(gv) / H) * 100}% - 7px)`, fontSize: 9, color: 'rgba(100,116,139,0.6)', fontWeight: 700, fontFamily: 'Inter,monospace', whiteSpace: 'nowrap' } }, fy(gv)))
+      ),
+      // Plot area
+      e('div', { style: { position: 'relative', flex: 1, minWidth: 0 } },
+        e('div', {
+          ref, onMouseMove: onMove, onMouseLeave: () => setHoverIdx(null),
+          style: { height, cursor: 'crosshair', position: 'relative' }
         },
-          e('div', { style: { background: 'rgba(6,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 11px', minWidth: 138, backdropFilter: 'blur(12px)' } },
-            e('div', { style: { fontSize: 8, color: 'rgba(100,116,139,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 6, fontFamily: '"Inter",sans-serif' } }, xLabel ? xLabel(hp) : ''),
-            tooltipRows(hp).map(([lbl, val, c], ri) => e('div', { key: ri, style: { display: 'flex', justifyContent: 'space-between', gap: 14, marginBottom: 2 } },
-              e('span', { style: { fontSize: 8, color: 'rgba(148,163,184,0.6)', fontWeight: 600, fontFamily: '"Inter",sans-serif' } }, lbl),
-              e('span', { style: { fontSize: 10, color: c || '#fff', fontWeight: 800, fontFamily: '"Inter",sans-serif', fontVariantNumeric: 'tabular-nums' } }, val)
-            ))
+          e('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: '100%', preserveAspectRatio: 'none', style: { display: 'block', overflow: 'visible' } },
+            gridVals.map((gv, gi) => e('line', { key: 'gl' + gi, x1: PL, y1: toY(gv), x2: W - PR, y2: toY(gv), stroke: 'rgba(255,255,255,0.05)', strokeWidth: 1 })),
+            points.map((p, i) => {
+              const x = PL + i * slot + gap / 2;
+              const y = toY(p[valueKey]);
+              const clr = colorFor(p);
+              const isHover = i === hoverIdx;
+              return e('rect', {
+                key: i, x, y, width: barW, height: Math.max(1, (PT + plotH) - y),
+                fill: clr, opacity: isHover ? 1 : 0.7, rx: 3,
+                style: isHover ? { filter: `drop-shadow(0 0 8px ${clr}88)` } : undefined
+              });
+            }),
+            hoverIdx != null && e('line', { x1: PL + (hoverIdx + 0.5) * slot, y1: PT, x2: PL + (hoverIdx + 0.5) * slot, y2: H - PB, stroke: 'rgba(255,255,255,0.14)', strokeWidth: 1 })
+          ),
+          // X-axis start/end labels
+          xLabel && n > 1 && e('span', { style: { position: 'absolute', left: 0, bottom: 2, fontSize: 9, color: 'rgba(100,116,139,0.5)', fontWeight: 600, fontFamily: 'Inter,sans-serif', pointerEvents: 'none' } }, xLabel(points[0])),
+          xLabel && n > 1 && e('span', { style: { position: 'absolute', right: 0, bottom: 2, fontSize: 9, color: 'rgba(100,116,139,0.5)', fontWeight: 600, fontFamily: 'Inter,sans-serif', pointerEvents: 'none' } }, xLabel(points[n - 1])),
+          hp && e('div', {
+            style: {
+              position: 'absolute', top: 4, zIndex: 20, pointerEvents: 'none',
+              ...(hoverXPct > 60 ? { right: `calc(${100 - hoverXPct}% + 8px)` } : { left: `calc(${hoverXPct}% + 8px)` })
+            }
+          },
+            e('div', { style: { background: 'rgba(6,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 11px', minWidth: 138, backdropFilter: 'blur(12px)' } },
+              e('div', { style: { fontSize: 8, color: 'rgba(100,116,139,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 6, fontFamily: '"Inter",sans-serif' } }, xLabel ? xLabel(hp) : ''),
+              tooltipRows(hp).map(([lbl, val, c], ri) => e('div', { key: ri, style: { display: 'flex', justifyContent: 'space-between', gap: 14, marginBottom: 2 } },
+                e('span', { style: { fontSize: 8, color: 'rgba(148,163,184,0.6)', fontWeight: 600, fontFamily: '"Inter",sans-serif' } }, lbl),
+                e('span', { style: { fontSize: 10, color: c || '#fff', fontWeight: 800, fontFamily: '"Inter",sans-serif', fontVariantNumeric: 'tabular-nums' } }, val)
+              ))
+            )
           )
         )
       )
@@ -4778,9 +4823,9 @@
           ),
 
           e('div', { className: 'relative z-10 flex flex-col gap-8' },
-            // Reactive charts — regression fit (PCA) and mean-reversion Z-score band (StatArb)
-            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
-              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+            // Reactive charts — regression fit (PCA) and mean-reversion Z-score band (StatArb), following the view toggle above
+            e('div', { className: `grid grid-cols-1 ${statArbView === 'combined' ? 'md:grid-cols-2' : ''} gap-6` },
+              (statArbView === 'pca' || statArbView === 'combined') && e('div', { key: 'chart-pca', className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
                 e('div', { className: 'flex items-center justify-between mb-2' },
                   e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Trend Regression Fit'),
                   e('span', { className: 'text-[8px] font-bold text-blue-400/70 uppercase tracking-widest' }, `${ticker} · price vs. fit`)
@@ -4790,6 +4835,7 @@
                   valueKeys: ['price', 'trend'],
                   colors: ['#facc15', '#60a5fa'],
                   accent: '#60a5fa',
+                  yFormat: v => '$' + v.toFixed(0),
                   xLabel: fmtBarTime,
                   tooltipRows: p => [
                     ['Price', '$' + p.price.toFixed(2), '#facc15'],
@@ -4798,7 +4844,7 @@
                   ]
                 })
               ),
-              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+              (statArbView === 'statarb' || statArbView === 'combined') && e('div', { key: 'chart-statarb', className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
                 e('div', { className: 'flex items-center justify-between mb-2' },
                   e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Mean-Reversion Z-Score'),
                   e('span', { className: 'text-[8px] font-bold text-brand-yellow/70 uppercase tracking-widest' }, '±2σ band')
@@ -4811,6 +4857,7 @@
                   bandColor: 'rgba(96,165,250,0.08)',
                   zeroLine: true,
                   accent: '#facc15',
+                  yFormat: v => v.toFixed(1) + 'σ',
                   xLabel: fmtBarTime,
                   tooltipRows: p => [
                     ['Z-score', (p.z >= 0 ? '+' : '') + p.z.toFixed(2) + 'σ', Math.abs(p.z) > 2 ? '#ef4444' : '#facc15'],
@@ -4906,9 +4953,9 @@
           ),
 
           e('div', { className: 'relative z-10 flex flex-col gap-8' },
-            // Reactive charts — cumulative order-flow imbalance and bucketed VPIN toxicity
-            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
-              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+            // Reactive charts — cumulative order-flow imbalance and bucketed VPIN toxicity, following the view toggle above
+            e('div', { className: `grid grid-cols-1 ${microView === 'combined' ? 'md:grid-cols-2' : ''} gap-6` },
+              (microView === 'ofi' || microView === 'combined') && e('div', { key: 'chart-ofi', className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
                 e('div', { className: 'flex items-center justify-between mb-2' },
                   e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Cumulative Order Flow (OFI)'),
                   e('span', { className: 'text-[8px] font-bold text-blue-400/70 uppercase tracking-widest' }, 'net aggressor flow')
@@ -4919,6 +4966,7 @@
                   colors: ['#60a5fa'],
                   zeroLine: true,
                   accent: '#60a5fa',
+                  yFormat: v => v.toFixed(1),
                   xLabel: fmtBarTime,
                   tooltipRows: p => [
                     ['Cumulative flow', (p.flow >= 0 ? '+' : '') + p.flow.toFixed(2), p.flow >= 0 ? '#22c55e' : '#ef4444'],
@@ -4926,7 +4974,7 @@
                   ]
                 })
               ),
-              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+              (microView === 'vpin' || microView === 'combined') && e('div', { key: 'chart-vpin', className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
                 e('div', { className: 'flex items-center justify-between mb-2' },
                   e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'VPIN Toxicity by Bucket'),
                   e('span', { className: 'text-[8px] font-bold text-brand-yellow/70 uppercase tracking-widest' }, 'volume-synced buckets')
@@ -4935,6 +4983,7 @@
                   points: chartSeries.vpinSeries,
                   valueKey: 'toxicity',
                   colorFor: p => p.toxicity > 0.66 ? '#ef4444' : p.toxicity > 0.33 ? '#facc15' : '#60a5fa',
+                  yFormat: v => (v * 100).toFixed(0) + '%',
                   xLabel: p => `Bucket ${p.idx + 1} · ${fmtBarTime(p)}`,
                   tooltipRows: p => [
                     ['Toxicity', (p.toxicity * 100).toFixed(1) + '%', p.toxicity > 0.66 ? '#ef4444' : p.toxicity > 0.33 ? '#facc15' : '#60a5fa'],
@@ -5030,9 +5079,9 @@
           ),
 
           e('div', { className: 'relative z-10 flex flex-col gap-8' },
-            // Reactive charts — HMM hidden-state timeline and GARCH conditional volatility
-            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
-              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+            // Reactive charts — HMM hidden-state timeline and GARCH conditional volatility, following the view toggle above
+            e('div', { className: `grid grid-cols-1 ${regimeView === 'combined' ? 'md:grid-cols-2' : ''} gap-6` },
+              (regimeView === 'hmm' || regimeView === 'combined') && e('div', { key: 'chart-hmm', className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
                 e('div', { className: 'flex items-center justify-between mb-2' },
                   e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Hidden-State Timeline (HMM)'),
                   e('div', { className: 'flex items-center gap-2' },
@@ -5050,6 +5099,7 @@
                   zeroLine: true,
                   pointColorKey: 'dotColor',
                   accent: '#c084fc',
+                  yFormat: v => v.toFixed(1) + 'σ',
                   xLabel: fmtBarTime,
                   tooltipRows: p => [
                     ['Regime state', p.state, p.dotColor],
@@ -5058,7 +5108,7 @@
                   ]
                 })
               ),
-              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+              (regimeView === 'garch' || regimeView === 'combined') && e('div', { key: 'chart-garch', className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
                 e('div', { className: 'flex items-center justify-between mb-2' },
                   e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Conditional Volatility (GARCH)'),
                   e('span', { className: 'text-[8px] font-bold text-purple-400/70 uppercase tracking-widest' }, 'rolling annualized vol')
@@ -5068,6 +5118,7 @@
                   valueKeys: ['vol'],
                   colors: ['#c084fc'],
                   accent: '#c084fc',
+                  yFormat: v => v.toFixed(0) + '%',
                   xLabel: fmtBarTime,
                   tooltipRows: p => [
                     ['Ann. volatility', p.vol.toFixed(1) + '%', p.vol > 45 ? '#ef4444' : p.vol > 25 ? '#facc15' : '#22c55e']
