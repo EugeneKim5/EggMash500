@@ -2935,6 +2935,150 @@
     );
   });
 
+  /* ─── Reactive mini analytics charts (hover-to-inspect) ───────────
+     Used by StatArb/PCA, Microstructure (OFI/VPIN) and Regime
+     Detection (HMM/GARCH) sections — anywhere a time-series is the
+     natural way to *observe* the signal rather than a single score. */
+  const MicroChart = React.memo(({ points, valueKeys, colors, height=112, zeroLine=false, bandKeys=null, bandColor='rgba(250,204,21,0.14)', xLabel, tooltipRows, pointColorKey=null, accent='#facc15', emptyLabel='Not enough data yet' }) => {
+    const ref = useRef(null);
+    const [hoverIdx, setHoverIdx] = useState(null);
+    const W = 1000, H = height;
+    const n = points.length;
+
+    const { minV, maxV } = useMemo(() => {
+      const vals = [];
+      points.forEach(p => {
+        valueKeys.forEach(k => { if (isFinite(p[k])) vals.push(p[k]); });
+        if (bandKeys) { if (isFinite(p[bandKeys[0]])) vals.push(p[bandKeys[0]]); if (isFinite(p[bandKeys[1]])) vals.push(p[bandKeys[1]]); }
+      });
+      if (zeroLine) vals.push(0);
+      if (!vals.length) return { minV: 0, maxV: 1 };
+      return { minV: Math.min(...vals), maxV: Math.max(...vals) };
+    }, [points]);
+    const range = (maxV - minV) || 1;
+    const pad = range * 0.12;
+    const toX = i => n > 1 ? (i / (n - 1)) * W : W / 2;
+    const toY = v => H - 10 - ((v - (minV - pad)) / (range + pad * 2)) * (H - 20);
+
+    const buildPath = key => n < 2 ? '' : points.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(p[key]).toFixed(1)}`).join(' ');
+    const buildBandPath = () => {
+      if (!bandKeys || n < 2) return '';
+      const top = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(p[bandKeys[0]]).toFixed(1)}`).join(' ');
+      const bottomRev = [...points].reverse().map((p, i) => `L${toX(n - 1 - i).toFixed(1)},${toY(p[bandKeys[1]]).toFixed(1)}`).join(' ');
+      return `${top} ${bottomRev} Z`;
+    };
+
+    const onMove = ev => {
+      if (!ref.current || n === 0) return;
+      const rect = ref.current.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+      setHoverIdx(Math.round(ratio * (n - 1)));
+    };
+
+    const hp = hoverIdx != null ? points[hoverIdx] : null;
+    const hoverXPct = hoverIdx != null ? (toX(hoverIdx) / W) * 100 : 0;
+
+    if (n < 2) return e('div', { style: { height, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+      e('span', { className: 'text-[9px] font-bold text-slate-600 uppercase tracking-widest' }, emptyLabel)
+    );
+
+    return e('div', { style: { position: 'relative' } },
+      e('div', {
+        ref, onMouseMove: onMove, onMouseLeave: () => setHoverIdx(null),
+        style: { height, cursor: 'crosshair', position: 'relative' }
+      },
+        e('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: '100%', preserveAspectRatio: 'none', style: { display: 'block', overflow: 'visible' } },
+          zeroLine && e('line', { x1: 0, y1: toY(0), x2: W, y2: toY(0), stroke: 'rgba(255,255,255,0.16)', strokeWidth: 1, strokeDasharray: '5 4' }),
+          bandKeys && e('path', { d: buildBandPath(), fill: bandColor, stroke: 'none' }),
+          ...valueKeys.map((k, ki) => e('path', {
+            key: k, d: buildPath(k), fill: 'none', stroke: colors[ki] || accent, strokeWidth: 2.2,
+            strokeLinecap: 'round', strokeLinejoin: 'round',
+            style: { filter: `drop-shadow(0 0 6px ${(colors[ki] || accent)}55)` }
+          })),
+          pointColorKey && points.map((p, i) => e('circle', { key: 'pc' + i, cx: toX(i), cy: toY(p[valueKeys[0]]), r: 2, fill: p[pointColorKey] || accent, opacity: 0.85 })),
+          hoverIdx != null && e('line', { x1: toX(hoverIdx), y1: 0, x2: toX(hoverIdx), y2: H, stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }),
+          hoverIdx != null && valueKeys.map((k, ki) => e('circle', { key: 'hd' + k, cx: toX(hoverIdx), cy: toY(hp[k]), r: 4.2, fill: '#050816', stroke: colors[ki] || accent, strokeWidth: 2.2 }))
+        ),
+        hp && e('div', {
+          style: {
+            position: 'absolute', top: 4, zIndex: 20, pointerEvents: 'none',
+            ...(hoverXPct > 60 ? { right: `calc(${100 - hoverXPct}% + 8px)` } : { left: `calc(${hoverXPct}% + 8px)` })
+          }
+        },
+          e('div', { style: { background: 'rgba(6,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 11px', minWidth: 138, backdropFilter: 'blur(12px)' } },
+            e('div', { style: { fontSize: 8, color: 'rgba(100,116,139,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 6, fontFamily: '"Inter",sans-serif' } }, xLabel ? xLabel(hp) : ''),
+            tooltipRows(hp).map(([lbl, val, c], ri) => e('div', { key: ri, style: { display: 'flex', justifyContent: 'space-between', gap: 14, marginBottom: 2 } },
+              e('span', { style: { fontSize: 8, color: 'rgba(148,163,184,0.6)', fontWeight: 600, fontFamily: '"Inter",sans-serif' } }, lbl),
+              e('span', { style: { fontSize: 10, color: c || '#fff', fontWeight: 800, fontFamily: '"Inter",sans-serif', fontVariantNumeric: 'tabular-nums' } }, val)
+            ))
+          )
+        )
+      )
+    );
+  });
+
+  const MicroBarChart = React.memo(({ points, valueKey, colorFor, height=112, xLabel, tooltipRows, emptyLabel='Not enough data yet' }) => {
+    const ref = useRef(null);
+    const [hoverIdx, setHoverIdx] = useState(null);
+    const W = 1000, H = height;
+    const n = points.length;
+    const maxV = n ? Math.max(...points.map(p => p[valueKey]), 1e-6) : 1;
+
+    const gap = 3;
+    const barW = n ? (W / n) - gap : 0;
+    const toY = v => H - 10 - (v / maxV) * (H - 20);
+
+    const onMove = ev => {
+      if (!ref.current || n === 0) return;
+      const rect = ref.current.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+      setHoverIdx(Math.min(n - 1, Math.floor(ratio * n)));
+    };
+
+    const hp = hoverIdx != null ? points[hoverIdx] : null;
+    const hoverXPct = hoverIdx != null ? ((hoverIdx + 0.5) / n) * 100 : 0;
+
+    if (n < 2) return e('div', { style: { height, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+      e('span', { className: 'text-[9px] font-bold text-slate-600 uppercase tracking-widest' }, emptyLabel)
+    );
+
+    return e('div', { style: { position: 'relative' } },
+      e('div', {
+        ref, onMouseMove: onMove, onMouseLeave: () => setHoverIdx(null),
+        style: { height, cursor: 'crosshair', position: 'relative' }
+      },
+        e('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: '100%', preserveAspectRatio: 'none', style: { display: 'block', overflow: 'visible' } },
+          points.map((p, i) => {
+            const x = i * (W / n) + gap / 2;
+            const y = toY(p[valueKey]);
+            const clr = colorFor(p);
+            const isHover = i === hoverIdx;
+            return e('rect', {
+              key: i, x, y, width: Math.max(1, barW), height: Math.max(1, H - 10 - y),
+              fill: clr, opacity: isHover ? 1 : 0.72, rx: 2,
+              style: isHover ? { filter: `drop-shadow(0 0 8px ${clr}88)` } : undefined
+            });
+          }),
+          hoverIdx != null && e('line', { x1: (hoverIdx + 0.5) * (W / n), y1: 0, x2: (hoverIdx + 0.5) * (W / n), y2: H, stroke: 'rgba(255,255,255,0.12)', strokeWidth: 1 })
+        ),
+        hp && e('div', {
+          style: {
+            position: 'absolute', top: 4, zIndex: 20, pointerEvents: 'none',
+            ...(hoverXPct > 60 ? { right: `calc(${100 - hoverXPct}% + 8px)` } : { left: `calc(${hoverXPct}% + 8px)` })
+          }
+        },
+          e('div', { style: { background: 'rgba(6,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 11px', minWidth: 138, backdropFilter: 'blur(12px)' } },
+            e('div', { style: { fontSize: 8, color: 'rgba(100,116,139,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 6, fontFamily: '"Inter",sans-serif' } }, xLabel ? xLabel(hp) : ''),
+            tooltipRows(hp).map(([lbl, val, c], ri) => e('div', { key: ri, style: { display: 'flex', justifyContent: 'space-between', gap: 14, marginBottom: 2 } },
+              e('span', { style: { fontSize: 8, color: 'rgba(148,163,184,0.6)', fontWeight: 600, fontFamily: '"Inter",sans-serif' } }, lbl),
+              e('span', { style: { fontSize: 10, color: c || '#fff', fontWeight: 800, fontFamily: '"Inter",sans-serif', fontVariantNumeric: 'tabular-nums' } }, val)
+            ))
+          )
+        )
+      )
+    );
+  });
+
   /* ─── Sidebar Components ────────────────────────────────────── */
   const SidebarItem = ({ icon, label, onClick }) => {
     return e('div', { className: 'sidebar-item', onClick },
@@ -3570,6 +3714,88 @@
 
       return { totalReturn, shortReturn, zScore, rSquared, zVelocity, annualizedVol, trendConsistency, rangePosition, distToHigh, distToLow, volRatio, turnover, intradayReturn, flowImbalance, vpinProxy, volClusterCorr };
     };
+
+    // ── CHART SERIES — real per-bar series feeding the reactive mini
+    // charts in the PCA/StatArb, Microstructure, and Regime sections.
+    const fmtBarTime = p => {
+      if (p && p.time && p.time > 1_000_000) {
+        const d = new Date(p.time * 1000);
+        return ['1D'].includes(activeRange)
+          ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+      return `Bar ${p ? p.idx : ''}`;
+    };
+
+    const chartSeries = useMemo(() => {
+      const hist = data.history.filter(d => isFinite(d.price));
+      const n = hist.length;
+      const empty = { trendSeries: [], zSeries: [], ofiSeries: [], vpinSeries: [], garchSeries: [], hmmSeries: [] };
+      if (n < 6) return empty;
+
+      const closes = hist.map(d => d.price);
+      const times  = hist.map(d => d.time);
+      const returns = [];
+      for (let i = 1; i < n; i++) returns.push((closes[i] - closes[i - 1]) / (closes[i - 1] || 1));
+
+      // Regression trendline over the trailing window (PCA)
+      const win = Math.min(40, n);
+      const startIdx = n - win;
+      const winCloses = closes.slice(startIdx);
+      const xs = winCloses.map((_, i) => i);
+      const xMean = qMean(xs), yMean = qMean(winCloses);
+      const covXY = qMean(xs.map((x, i) => (x - xMean) * (winCloses[i] - yMean)));
+      const varX = qMean(xs.map(x => (x - xMean) ** 2)) || 1e-6;
+      const slope = covXY / varX, intercept = yMean - slope * xMean;
+      const trendSeries = winCloses.map((p, i) => ({ idx: startIdx + i, time: times[startIdx + i], price: p, trend: slope * i + intercept }));
+
+      // Rolling 20-bar Z-score (StatArb mean reversion) with constant ±2σ reference band
+      const rollWin = 20;
+      const zSeries = closes.map((c, i) => {
+        const s = Math.max(0, i - rollWin + 1);
+        const w = closes.slice(s, i + 1);
+        const m = qMean(w), sd = qStdev(w) || 1e-6;
+        return { idx: i, time: times[i], price: c, z: (c - m) / sd, upper: 2, lower: -2 };
+      });
+
+      // Cumulative signed order-flow (OFI)
+      let cum = 0;
+      const ofiSeries = returns.map((r, i) => { cum += r * 100; return { idx: i + 1, time: times[i + 1], flow: cum, bar: r * 100 }; });
+
+      // VPIN — bucketed toxicity (reuses the same bucketing logic as the score)
+      const bucketSize = Math.max(3, Math.floor(returns.length / 10) || 3);
+      const vpinSeries = [];
+      for (let i = 0; i < returns.length; i += bucketSize) {
+        const chunk = returns.slice(i, i + bucketSize);
+        if (!chunk.length) continue;
+        const buy = chunk.filter(r => r > 0).reduce((a, b) => a + b, 0);
+        const sell = chunk.filter(r => r < 0).reduce((a, b) => a + Math.abs(b), 0);
+        const tot = buy + sell;
+        vpinSeries.push({ idx: vpinSeries.length, time: times[Math.min(i + chunk.length - 1, times.length - 1)], toxicity: tot > 0 ? Math.abs(buy - sell) / tot : 0 });
+      }
+
+      // Rolling 10-bar annualized volatility (GARCH conditional vol proxy)
+      const volWin = 10;
+      const garchSeries = returns.map((r, i) => {
+        const s = Math.max(0, i - volWin + 1);
+        const w = returns.slice(s, i + 1);
+        return { idx: i + 1, time: times[i + 1], vol: (qStdev(w) || 0) * Math.sqrt(252) * 100 };
+      });
+
+      // HMM regime classification per bar, colored by detected hidden state
+      const stateColor = { STABLE: '#60a5fa', UPTREND: '#22c55e', DOWNTREND: '#ef4444', CHOP: '#facc15' };
+      const hmmSeries = zSeries.map((zp, i) => {
+        const vol = garchSeries[Math.max(0, i - 1)]?.vol ?? 0;
+        let state = 'CHOP';
+        if (vol < 22 && Math.abs(zp.z) < 1) state = 'STABLE';
+        else if (zp.z > 0.5 && vol < 50) state = 'UPTREND';
+        else if (zp.z < -0.5) state = 'DOWNTREND';
+        return { idx: zp.idx, time: zp.time, price: zp.price, z: zp.z, vol, state, dotColor: stateColor[state] };
+      });
+
+      return { trendSeries, zSeries, ofiSeries, vpinSeries, garchSeries, hmmSeries };
+    }, [data.history, activeRange]);
+
 
     const refreshStatArb = () => {
       const q = computeQuant();
@@ -4552,6 +4778,48 @@
           ),
 
           e('div', { className: 'relative z-10 flex flex-col gap-8' },
+            // Reactive charts — regression fit (PCA) and mean-reversion Z-score band (StatArb)
+            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+                e('div', { className: 'flex items-center justify-between mb-2' },
+                  e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Trend Regression Fit'),
+                  e('span', { className: 'text-[8px] font-bold text-blue-400/70 uppercase tracking-widest' }, `${ticker} · price vs. fit`)
+                ),
+                e(MicroChart, {
+                  points: chartSeries.trendSeries,
+                  valueKeys: ['price', 'trend'],
+                  colors: ['#facc15', '#60a5fa'],
+                  accent: '#60a5fa',
+                  xLabel: fmtBarTime,
+                  tooltipRows: p => [
+                    ['Price', '$' + p.price.toFixed(2), '#facc15'],
+                    ['Fitted trend', '$' + p.trend.toFixed(2), '#60a5fa'],
+                    ['Residual', (p.price - p.trend >= 0 ? '+$' : '-$') + Math.abs(p.price - p.trend).toFixed(2), p.price >= p.trend ? '#22c55e' : '#ef4444']
+                  ]
+                })
+              ),
+              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+                e('div', { className: 'flex items-center justify-between mb-2' },
+                  e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Mean-Reversion Z-Score'),
+                  e('span', { className: 'text-[8px] font-bold text-brand-yellow/70 uppercase tracking-widest' }, '±2σ band')
+                ),
+                e(MicroChart, {
+                  points: chartSeries.zSeries,
+                  valueKeys: ['z'],
+                  colors: ['#facc15'],
+                  bandKeys: ['upper', 'lower'],
+                  bandColor: 'rgba(96,165,250,0.08)',
+                  zeroLine: true,
+                  accent: '#facc15',
+                  xLabel: fmtBarTime,
+                  tooltipRows: p => [
+                    ['Z-score', (p.z >= 0 ? '+' : '') + p.z.toFixed(2) + 'σ', Math.abs(p.z) > 2 ? '#ef4444' : '#facc15'],
+                    ['Price', '$' + p.price.toFixed(2), '#fff']
+                  ]
+                })
+              )
+            ),
+
             // StatArb/PCA Grid
             e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-1' },
               (statArbView === 'combined' ? [...pcaData, ...statArbData] : (statArbView === 'pca' ? pcaData : statArbData))
@@ -4638,6 +4906,44 @@
           ),
 
           e('div', { className: 'relative z-10 flex flex-col gap-8' },
+            // Reactive charts — cumulative order-flow imbalance and bucketed VPIN toxicity
+            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+                e('div', { className: 'flex items-center justify-between mb-2' },
+                  e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Cumulative Order Flow (OFI)'),
+                  e('span', { className: 'text-[8px] font-bold text-blue-400/70 uppercase tracking-widest' }, 'net aggressor flow')
+                ),
+                e(MicroChart, {
+                  points: chartSeries.ofiSeries,
+                  valueKeys: ['flow'],
+                  colors: ['#60a5fa'],
+                  zeroLine: true,
+                  accent: '#60a5fa',
+                  xLabel: fmtBarTime,
+                  tooltipRows: p => [
+                    ['Cumulative flow', (p.flow >= 0 ? '+' : '') + p.flow.toFixed(2), p.flow >= 0 ? '#22c55e' : '#ef4444'],
+                    ['This bar', (p.bar >= 0 ? '+' : '') + p.bar.toFixed(2) + '%', p.bar >= 0 ? '#22c55e' : '#ef4444']
+                  ]
+                })
+              ),
+              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+                e('div', { className: 'flex items-center justify-between mb-2' },
+                  e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'VPIN Toxicity by Bucket'),
+                  e('span', { className: 'text-[8px] font-bold text-brand-yellow/70 uppercase tracking-widest' }, 'volume-synced buckets')
+                ),
+                e(MicroBarChart, {
+                  points: chartSeries.vpinSeries,
+                  valueKey: 'toxicity',
+                  colorFor: p => p.toxicity > 0.66 ? '#ef4444' : p.toxicity > 0.33 ? '#facc15' : '#60a5fa',
+                  xLabel: p => `Bucket ${p.idx + 1} · ${fmtBarTime(p)}`,
+                  tooltipRows: p => [
+                    ['Toxicity', (p.toxicity * 100).toFixed(1) + '%', p.toxicity > 0.66 ? '#ef4444' : p.toxicity > 0.33 ? '#facc15' : '#60a5fa'],
+                    ['Read', p.toxicity > 0.66 ? 'Elevated' : p.toxicity > 0.33 ? 'Moderate' : 'Healthy', '#fff']
+                  ]
+                })
+              )
+            ),
+
             // OFI/VPIN Grid
             e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-1' },
               (microView === 'combined' ? [...ofiData, ...vpinData] : (microView === 'ofi' ? ofiData : vpinData))
@@ -4724,6 +5030,52 @@
           ),
 
           e('div', { className: 'relative z-10 flex flex-col gap-8' },
+            // Reactive charts — HMM hidden-state timeline and GARCH conditional volatility
+            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+                e('div', { className: 'flex items-center justify-between mb-2' },
+                  e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Hidden-State Timeline (HMM)'),
+                  e('div', { className: 'flex items-center gap-2' },
+                    [['STABLE','#60a5fa'],['UPTREND','#22c55e'],['DOWNTREND','#ef4444'],['CHOP','#facc15']].map(([lbl,c])=>
+                      e('span', { key: lbl, className: 'flex items-center gap-1 text-[7px] font-black uppercase tracking-widest text-slate-500' },
+                        e('span', { style: { width:6, height:6, borderRadius:9999, background:c, display:'inline-block' } }), lbl
+                      )
+                    )
+                  )
+                ),
+                e(MicroChart, {
+                  points: chartSeries.hmmSeries,
+                  valueKeys: ['z'],
+                  colors: ['#c084fc'],
+                  zeroLine: true,
+                  pointColorKey: 'dotColor',
+                  accent: '#c084fc',
+                  xLabel: fmtBarTime,
+                  tooltipRows: p => [
+                    ['Regime state', p.state, p.dotColor],
+                    ['Z-score', (p.z >= 0 ? '+' : '') + p.z.toFixed(2) + 'σ', '#fff'],
+                    ['Ann. vol', p.vol.toFixed(1) + '%', '#fff']
+                  ]
+                })
+              ),
+              e('div', { className: 'p-4 rounded-2xl bg-white/[0.03] border border-white/5' },
+                e('div', { className: 'flex items-center justify-between mb-2' },
+                  e('span', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-[0.18em]' }, 'Conditional Volatility (GARCH)'),
+                  e('span', { className: 'text-[8px] font-bold text-purple-400/70 uppercase tracking-widest' }, 'rolling annualized vol')
+                ),
+                e(MicroChart, {
+                  points: chartSeries.garchSeries,
+                  valueKeys: ['vol'],
+                  colors: ['#c084fc'],
+                  accent: '#c084fc',
+                  xLabel: fmtBarTime,
+                  tooltipRows: p => [
+                    ['Ann. volatility', p.vol.toFixed(1) + '%', p.vol > 45 ? '#ef4444' : p.vol > 25 ? '#facc15' : '#22c55e']
+                  ]
+                })
+              )
+            ),
+
             // HMM/GARCH Grid
             e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-1' },
               (regimeView === 'combined' ? [...hmmData, ...garchData] : (regimeView === 'hmm' ? hmmData : garchData))
