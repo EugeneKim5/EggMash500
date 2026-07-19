@@ -3018,10 +3018,29 @@
               strokeLinecap: 'round', strokeLinejoin: 'round',
               style: { filter: `drop-shadow(0 0 6px ${(colors[ki] || accent)}55)` }
             })),
-            pointColorKey && points.map((p, i) => e('circle', { key: 'pc' + i, cx: toX(i), cy: toY(p[valueKeys[0]]), r: 3, fill: p[pointColorKey] || accent, opacity: 0.9 })),
-            hoverIdx != null && e('line', { x1: toX(hoverIdx), y1: PT, x2: toX(hoverIdx), y2: H - PB, stroke: 'rgba(255,255,255,0.22)', strokeWidth: 1 }),
-            hoverIdx != null && valueKeys.map((k, ki) => e('circle', { key: 'hd' + k, cx: toX(hoverIdx), cy: toY(hp[k]), r: 5, fill: '#050816', stroke: colors[ki] || accent, strokeWidth: 2.4 }))
+            hoverIdx != null && e('line', { x1: toX(hoverIdx), y1: PT, x2: toX(hoverIdx), y2: H - PB, stroke: 'rgba(255,255,255,0.22)', strokeWidth: 1 })
           ),
+          // Per-point regime dots — fixed-size HTML overlay so circles stay round regardless of chart width
+          pointColorKey && points.map((p, i) => e('div', {
+            key: 'pc' + i,
+            style: {
+              position: 'absolute', width: 6, height: 6, borderRadius: '50%',
+              left: `${(toX(i) / W) * 100}%`, top: `${(toY(p[valueKeys[0]]) / H) * 100}%`,
+              transform: 'translate(-50%,-50%)', background: p[pointColorKey] || accent, opacity: 0.85,
+              pointerEvents: 'none'
+            }
+          })),
+          // Hover dot(s) — fixed-size HTML overlay, matches the main price chart's hover dot proportions
+          hp && valueKeys.map((k, ki) => e('div', {
+            key: 'hd' + k,
+            style: {
+              position: 'absolute', width: 14, height: 14, borderRadius: '50%',
+              left: `${(toX(hoverIdx) / W) * 100}%`, top: `${(toY(hp[k]) / H) * 100}%`,
+              transform: 'translate(-50%,-50%)', background: '#050816',
+              border: `2.5px solid ${colors[ki] || accent}`, boxShadow: `0 0 10px ${(colors[ki] || accent)}88`,
+              pointerEvents: 'none', zIndex: 10
+            }
+          })),
           // X-axis start/end labels
           xLabel && n > 1 && e('span', { style: { position: 'absolute', left: 0, bottom: 2, fontSize: 9, color: 'rgba(100,116,139,0.5)', fontWeight: 600, fontFamily: 'Inter,sans-serif', pointerEvents: 'none' } }, xLabel(points[0])),
           xLabel && n > 1 && e('span', { style: { position: 'absolute', right: 0, bottom: 2, fontSize: 9, color: 'rgba(100,116,139,0.5)', fontWeight: 600, fontFamily: 'Inter,sans-serif', pointerEvents: 'none' } }, xLabel(points[n - 1])),
