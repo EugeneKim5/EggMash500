@@ -3014,6 +3014,20 @@
           ),
           label: 'StatArb',
           onClick: () => scrollTo('statarb-core')
+        }),
+        e(SidebarItem, {
+          icon: e('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2.5', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            e('path', { d: 'M3 12h4l3 8 4-16 3 8h4' })
+          ),
+          label: 'Microstructure',
+          onClick: () => scrollTo('microstructure-core')
+        }),
+        e(SidebarItem, {
+          icon: e('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2.5', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            e('path', { d: 'M3 3v18h18' }), e('path', { d: 'M7 15l4-6 4 3 5-9' })
+          ),
+          label: 'Regime',
+          onClick: () => scrollTo('regime-core')
         })
       ),
       document.body
@@ -3449,6 +3463,12 @@
     const [pcaData, setPcaData] = useState([]);
     const [statArbData, setStatArbData] = useState([]);
     const [statArbView, setStatArbView] = useState('combined'); // 'pca', 'statarb', 'combined'
+    const [ofiData, setOfiData] = useState([]);
+    const [vpinData, setVpinData] = useState([]);
+    const [microView, setMicroView] = useState('combined'); // 'ofi', 'vpin', 'combined'
+    const [hmmData, setHmmData] = useState([]);
+    const [garchData, setGarchData] = useState([]);
+    const [regimeView, setRegimeView] = useState('combined'); // 'hmm', 'garch', 'combined'
 
     // ── REAL QUANT ENGINE — every score below is computed from the live
     // price/volume series already fetched from Yahoo Finance (data.history,
@@ -3512,7 +3532,43 @@
       const turnover  = (isFinite(data.volRaw) && isFinite(data.capRaw) && data.capRaw>0) ? (data.volRaw*data.price)/data.capRaw : 0;
       const intradayReturn = (isFinite(data.open) && data.open>0) ? (data.price-data.open)/data.open : 0;
 
-      return { totalReturn, shortReturn, zScore, rSquared, zVelocity, annualizedVol, trendConsistency, rangePosition, distToHigh, distToLow, volRatio, turnover, intradayReturn };
+      // ── Microstructure proxies — bar-by-bar signed pressure using the
+      // magnitude of each up/down move as a stand-in for aggressive
+      // buy/sell volume when raw order-book ticks aren't available.
+      const buyPressure  = returns.filter(r=>r>0).reduce((a,b)=>a+b,0);
+      const sellPressure = returns.filter(r=>r<0).reduce((a,b)=>a+Math.abs(b),0);
+      const flowImbalance = (buyPressure+sellPressure) > 0 ? (buyPressure-sellPressure)/(buyPressure+sellPressure) : 0;
+
+      // Toxicity proxy (VPIN-style): bucket returns into sequential groups
+      // and measure how one-sided (imbalanced) each bucket's volume-weighted
+      // flow is, then average across buckets — high values flag the kind of
+      // order-flow toxicity that precedes liquidity air-pockets.
+      const bucketSize = Math.max(3, Math.floor(returns.length/6) || 3);
+      const toxBuckets = [];
+      for (let i=0;i<returns.length;i+=bucketSize) {
+        const chunk = returns.slice(i, i+bucketSize);
+        if (!chunk.length) continue;
+        const buy = chunk.filter(r=>r>0).reduce((a,b)=>a+b,0);
+        const sell = chunk.filter(r=>r<0).reduce((a,b)=>a+Math.abs(b),0);
+        const tot = buy+sell;
+        toxBuckets.push(tot>0 ? Math.abs(buy-sell)/tot : 0);
+      }
+      const vpinProxy = qMean(toxBuckets);
+
+      // Volatility-clustering proxy (for GARCH): lag-1 autocorrelation of
+      // absolute returns — persistently high |r_t| following high |r_t-1|
+      // is the empirical signature GARCH models are built to capture.
+      const absReturns = returns.map(Math.abs);
+      let volClusterCorr = 0;
+      if (absReturns.length > 3) {
+        const a1 = absReturns.slice(0, -1), a2 = absReturns.slice(1);
+        const m1 = qMean(a1), m2 = qMean(a2);
+        const cov = qMean(a1.map((v,i)=>(v-m1)*(a2[i]-m2)));
+        const sd1 = qStdev(a1) || 1e-6, sd2 = qStdev(a2) || 1e-6;
+        volClusterCorr = Math.max(-1, Math.min(1, cov/(sd1*sd2)));
+      }
+
+      return { totalReturn, shortReturn, zScore, rSquared, zVelocity, annualizedVol, trendConsistency, rangePosition, distToHigh, distToLow, volRatio, turnover, intradayReturn, flowImbalance, vpinProxy, volClusterCorr };
     };
 
     const refreshStatArb = () => {
@@ -3571,6 +3627,101 @@
 
       setPcaData(pcaList);
       setStatArbData(arbList);
+    };
+
+    const refreshMicrostructure = () => {
+      const q = computeQuant();
+      if (!q) { setOfiData([]); setVpinData([]); return; }
+
+      const ofiScore      = clamp10(5 + q.flowImbalance * 20);
+      const aggressorScore = clamp10(5 + (q.volRatio - 1) * 6 + q.flowImbalance * 8);
+
+      const ofiList = [
+        {
+          name: 'Order Flow Imbalance (OFI)',
+          value: parseFloat(ofiScore.toFixed(2)),
+          meaning: 'A proxy for the ratio of aggressive buy-side pressure to sell-side pressure across recent bars, built from the signed magnitude of each price move — the same directional signal a live limit-order-book OFI read would try to forecast tick-by-tick.',
+          rationale: `${ticker}'s recent bars show a net flow imbalance of ${q.flowImbalance>=0?'+':''}${(q.flowImbalance*100).toFixed(1)}% toward the ${q.flowImbalance>=0?'buy':'sell'} side. Recommendation: ${Math.abs(q.flowImbalance)>0.3 ? 'aggressive ' + (q.flowImbalance>0?'buyers':'sellers') + ' are pressing the tape — expect continuation risk on the next few ticks.' : 'flow is roughly balanced — no strong tick-direction edge from order flow alone.'}`
+        },
+        {
+          name: 'Aggressor Ratio',
+          value: parseFloat(aggressorScore.toFixed(2)),
+          meaning: 'Combines participation (volume vs. 3-month average) with the signed flow imbalance to approximate how one-sided the aggressive order flow has been.',
+          rationale: `Volume is running at ${(q.volRatio*100).toFixed(0)}% of average alongside a ${q.flowImbalance>=0?'buy':'sell'}-leaning tape. Recommendation: ${aggressorScore>7 ? 'aggressive buy-side orders are dominating — momentum entries favored short-term.' : aggressorScore<4 ? 'aggressive sell-side orders are dominating — momentum shorts favored short-term.' : 'aggressor flow is mixed; wait for a clearer imbalance before acting on microstructure alone.'}`
+        }
+      ];
+
+      const vpinScore   = clamp10(q.vpinProxy * 10);
+      const collapseRisk = clamp10(q.vpinProxy * 6 + q.annualizedVol * 6);
+
+      const vpinList = [
+        {
+          name: 'VPIN Toxicity Score',
+          value: parseFloat(vpinScore.toFixed(2)),
+          meaning: 'Volume-Synchronized Probability of Informed Trading proxy — buckets recent flow into equal-sized volume windows and measures how one-sided each bucket is. High values mean order flow looks "toxic" (dominated by informed/aggressive flow), the condition that historically precedes sudden liquidity withdrawal.',
+          rationale: `Bucketed order-flow imbalance for ${ticker} averages ${(q.vpinProxy*100).toFixed(1)}% across recent windows. Recommendation: ${vpinScore>7 ? 'elevated toxicity — market makers are more likely to be pulling quotes; widen expected slippage on entries.' : vpinScore>4 ? 'moderate toxicity — normal market-making conditions with some caution warranted.' : 'low toxicity — liquidity provision looks healthy right now.'}`
+        },
+        {
+          name: 'Liquidity Collapse Risk',
+          value: parseFloat(collapseRisk.toFixed(2)),
+          meaning: 'Combines the VPIN toxicity proxy with realized volatility to flag conditions historically associated with sudden, short-term liquidity air-pockets or flash-crash-style moves.',
+          rationale: `Toxicity of ${(q.vpinProxy*100).toFixed(1)}% paired with ${(q.annualizedVol*100).toFixed(1)}% annualized volatility. Recommendation: ${collapseRisk>7 ? 'flash-move risk is elevated — favor limit orders over market orders and reduce size into thin liquidity.' : 'liquidity conditions look stable enough for normal order routing.'}`
+        }
+      ];
+
+      setOfiData(ofiList);
+      setVpinData(vpinList);
+    };
+
+    const refreshRegime = () => {
+      const q = computeQuant();
+      if (!q) { setHmmData([]); setGarchData([]); return; }
+
+      const breakpointScore = clamp10(Math.abs(q.zVelocity) * 5 + (1 - q.rSquared) * 4);
+      const regimeLabel = q.annualizedVol > 0.4 && q.totalReturn < -0.02
+        ? 'AGGRESSIVE DOWN-TREND'
+        : q.rSquared > 0.55 && q.totalReturn > 0
+          ? 'STABLE UP-TREND'
+          : q.annualizedVol < 0.22
+            ? 'LOW-VOLATILITY STABLE'
+            : 'TRANSITIONAL / CHOPPY';
+      const stateConfidence = clamp10(q.rSquared * 6 + (1 - Math.min(1, q.annualizedVol * 2)) * 4);
+
+      const hmmList = [
+        {
+          name: 'Structural Breakpoint Probability',
+          value: parseFloat(breakpointScore.toFixed(2)),
+          meaning: 'A Hidden-Markov-style read on how likely the price series is mid-transition between hidden states (e.g. low-vol stable → aggressive down-trend), built from trend-fit decay and the acceleration of the mean-reversion Z-score.',
+          rationale: `Trend fit residual is ${((1-q.rSquared)*100).toFixed(1)}% with Z-score velocity of ${q.zVelocity>=0?'+':''}${q.zVelocity.toFixed(2)}σ. Recommendation: ${breakpointScore>7 ? 'high probability of an active state transition — treat existing trend/mean-reversion signals as unreliable until the new regime confirms.' : 'the current hidden state looks stable; existing signals remain trustworthy.'}`
+        },
+        {
+          name: 'Detected Regime State',
+          value: parseFloat(stateConfidence.toFixed(2)),
+          meaning: `Current best-fit hidden state classification: ${regimeLabel}. Confidence is scored from trend fit quality and how contained realized volatility is within the state.`,
+          rationale: `${ticker} currently classifies as ${regimeLabel} with ${(stateConfidence*10).toFixed(0)}% model confidence. Recommendation: ${regimeLabel==='AGGRESSIVE DOWN-TREND' ? 'defensive positioning / trend-following shorts are best supported by this state.' : regimeLabel==='STABLE UP-TREND' ? 'trend-following longs are best supported by this state.' : regimeLabel==='LOW-VOLATILITY STABLE' ? 'range/mean-reversion strategies are best supported by this state.' : 'stand aside on directional bets until a cleaner state emerges.'}`
+        }
+      ];
+
+      const garchScore    = clamp10(q.annualizedVol * 14);
+      const clusteringScore = clamp10(5 + q.volClusterCorr * 6);
+
+      const garchList = [
+        {
+          name: 'GARCH Volatility Forecast',
+          value: parseFloat(garchScore.toFixed(2)),
+          meaning: 'Conditional volatility read scaled for option-pricing and risk-sizing use — higher values imply the next-period volatility profile is elevated relative to a typical large-cap name.',
+          rationale: `Realized annualized volatility feeding the conditional forecast is ${(q.annualizedVol*100).toFixed(1)}%. Recommendation: ${garchScore>7 ? 'size option premium and position risk for an elevated-volatility regime; straddle-style structures may be relatively rich but justified.' : garchScore<4 ? 'the forecast volatility profile is subdued; option premium may be comparatively cheap.' : 'volatility forecast sits in a typical range for sizing decisions.'}`
+        },
+        {
+          name: 'Vol-Clustering Persistence',
+          value: parseFloat(clusteringScore.toFixed(2)),
+          meaning: 'Lag-1 autocorrelation of absolute returns — the core empirical pattern GARCH models fit (large moves tend to be followed by large moves, of either sign).',
+          rationale: `Absolute-return autocorrelation is ${q.volClusterCorr>=0?'+':''}${q.volClusterCorr.toFixed(2)}. Recommendation: ${q.volClusterCorr>0.3 ? 'strong clustering detected — expect the current volatility regime (calm or turbulent) to persist for several more sessions.' : q.volClusterCorr<-0.1 ? 'volatility is mean-reverting bar-to-bar — turbulent sessions are more likely to be followed by calmer ones.' : 'clustering is weak — little persistence signal from recent volatility alone.'}`
+        }
+      ];
+
+      setHmmData(hmmList);
+      setGarchData(garchList);
     };
 
     const refreshFactors = () => {
@@ -3704,6 +3855,8 @@
             setSentiment(buildSentiment()); // Recompute against the latest live price/volume data
             refreshFactors(); // Recompute factor analysis
             refreshStatArb(); // Recompute StatArb-style analysis
+            refreshMicrostructure(); // Recompute OFI/VPIN microstructure analytics
+            refreshRegime(); // Recompute HMM/GARCH regime detection
             return 0;
           }
           return prev - 1;
@@ -3715,6 +3868,8 @@
       refreshSentiment();
       refreshFactors();
       refreshStatArb();
+      refreshMicrostructure();
+      refreshRegime();
       setShowAllSentiment(false);
     }, [ticker]);
 
@@ -4434,6 +4589,178 @@
           ),
           // Subtle decorative effect
           e('div', { className: 'absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none', style: { backgroundImage: 'radial-gradient(circle at 0% 0%, #facc15 0%, transparent 60%)' } })
+        ),
+
+        // ── MARKET MICROSTRUCTURE ANALYTICS ──
+        e('div', { 
+          id: 'microstructure-core',
+          className: `mt-6 p-8 rounded-[26px] border-[1px] backdrop-blur-3xl transition-all duration-1000 relative min-h-[300px] shadow-neon overflow-hidden`,
+          style: {
+            background: 'linear-gradient(180deg, rgba(8,12,30,0.98), rgba(12,17,42,0.92))',
+            borderColor: 'rgba(96, 165, 250, 0.14)'
+          }
+        },
+          e('div', { className: 'flex items-center justify-between mb-8 relative z-10' },
+            e('div', { className: 'flex items-center gap-4' },
+              e('div', { className: 'p-3 rounded-2xl bg-blue-400/10 border border-blue-400/30 shadow-[0_0_24px_rgba(96,165,250,0.22)]' },
+                e('svg', { width: '22', height: '22', viewBox: '0 0 24 24', fill: 'none', stroke: '#60a5fa', strokeWidth: '3', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                  e('path', { d: 'M3 12h4l3 8 4-16 3 8h4' })
+                )
+              ),
+              e('div', {},
+                e('h3', { className: `text-[15px] font-black text-white uppercase tracking-[0.3em] leading-none mb-2` }, 'Market Microstructure Analytics'),
+                e('div', { className: 'flex items-center gap-2' },
+                  ['ofi', 'vpin', 'combined'].map(v => e('button', {
+                    key: v,
+                    onClick: () => setMicroView(v),
+                    className: `text-[8px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded transition-all ${microView === v ? 'bg-blue-400 text-[#050816] shadow-[0_0_16px_rgba(96,165,250,0.4)]' : 'text-slate-500 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10'}`
+                  }, v))
+                )
+              )
+            ),
+            e('div', { className: `flex items-center gap-4 px-4 py-2.5 rounded-xl bg-white/5 border border-white/5` },
+              isAnalyzing ? 
+                e('div', { className: 'flex items-center gap-3' },
+                  e('div', { className: 'w-2 h-2 rounded-full bg-blue-400 animate-spin border-b-2 border-transparent' }),
+                  e('span', { className: 'text-[10px] font-black text-blue-400 uppercase tracking-widest tabular-nums' }, `Calibrating: ${analysisTimeLeft}s`)
+                ) :
+                e('div', { className: 'flex items-center gap-5' },
+                  e('div', { className: 'flex items-center gap-2' },
+                    e('div', { className: 'w-1.5 h-1.5 rounded-full bg-slate-500' }),
+                    e('span', { className: `text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] tabular-nums` }, `Idle: ${timeUntilUpdate}s`)
+                  ),
+                  e('div', { className: 'flex items-center gap-2' },
+                    e('div', { className: 'w-2 h-2 rounded-full bg-brand-green animate-pulse shadow-[0_0_8px_#22c55e]' }),
+                    e('span', { className: `text-[10px] font-black text-slate-300 uppercase tracking-tight` }, 'Core Ready')
+                  )
+                )
+            )
+          ),
+
+          e('div', { className: 'relative z-10 flex flex-col gap-8' },
+            // OFI/VPIN Grid
+            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-1' },
+              (microView === 'combined' ? [...ofiData, ...vpinData] : (microView === 'ofi' ? ofiData : vpinData))
+                .map((m, idx) => e(StatArbRow, { key: m.name + idx, metric: m, index: idx, isAnalyzing, hasRevealed }))
+            ),
+
+            // Microstructure Verdict
+            e('div', { className: 'p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col md:flex-row items-center gap-6 shadow-inner' },
+              e('div', { className: 'flex items-center gap-3 min-w-[220px] pr-6 border-r border-white/5' },
+                e('div', { className: `w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_10px_#60a5fa] animate-pulse` }),
+                e('h4', { className: 'text-[10px] font-black text-white uppercase tracking-[0.2em] leading-none' }, 
+                  microView === 'ofi' ? 'Order Flow Signal' : microView === 'vpin' ? 'Toxicity Signal' : 'Combined Analysis'
+                )
+              ),
+              e('div', { className: 'flex-1' },
+                e('p', { className: 'text-[10px] leading-relaxed text-slate-400 font-bold font-mono' },
+                  microView === 'ofi' ? 
+                    `Order flow imbalance for ${ticker} tracks the ratio of aggressive buy to sell pressure across recent bars to forecast near-term tick direction.` :
+                  microView === 'vpin' ? 
+                    `VPIN-style toxicity analysis for ${ticker} flags whether current order flow resembles the informed, one-sided flow that historically precedes short-term liquidity air-pockets.` :
+                    `Combined OFI and VPIN intelligence for ${ticker} confirms a MICRO-FLOW node. Aggressive order flow and toxicity readings are cross-checked to gauge both tick-direction bias and liquidity fragility.`
+                )
+              ),
+              e('div', { className: 'flex items-center gap-3 pl-6 border-l border-white/5' },
+                e('span', { className: `text-[9px] font-black text-slate-500 uppercase tracking-widest` }, 'Signal:'),
+                e('div', { className: 'px-3 py-1.5 rounded-lg bg-blue-400/5 border border-blue-400/20' },
+                  e(FinanceTerm, { 
+                    term: microView === 'ofi' ? 'OFI-FLOW' : microView === 'vpin' ? 'VPIN-TOX' : 'MICRO-FLOW', 
+                    definition: microView === 'ofi' ? 'A strategy forecasting tick-by-tick direction from the imbalance of aggressive buy vs. sell orders.' : microView === 'vpin' ? 'A liquidity-risk read that measures order-flow toxicity to anticipate sudden short-term liquidity collapses.' : 'A combined microstructure read pairing order-flow direction with liquidity-toxicity risk.',
+                    isDay: false 
+                  })
+                )
+              )
+            )
+          ),
+          // Subtle decorative effect
+          e('div', { className: 'absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none', style: { backgroundImage: 'radial-gradient(circle at 0% 0%, #60a5fa 0%, transparent 60%)' } })
+        ),
+
+        // ── MATHEMATICAL TREND & REGIME DETECTION ──
+        e('div', { 
+          id: 'regime-core',
+          className: `mt-6 p-8 rounded-[26px] border-[1px] backdrop-blur-3xl transition-all duration-1000 relative min-h-[300px] shadow-neon overflow-hidden`,
+          style: {
+            background: 'linear-gradient(180deg, rgba(8,12,30,0.98), rgba(12,17,42,0.92))',
+            borderColor: 'rgba(192, 132, 252, 0.14)'
+          }
+        },
+          e('div', { className: 'flex items-center justify-between mb-8 relative z-10' },
+            e('div', { className: 'flex items-center gap-4' },
+              e('div', { className: 'p-3 rounded-2xl bg-purple-400/10 border border-purple-400/30 shadow-[0_0_24px_rgba(192,132,252,0.22)]' },
+                e('svg', { width: '22', height: '22', viewBox: '0 0 24 24', fill: 'none', stroke: '#c084fc', strokeWidth: '3', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                  e('path', { d: 'M3 3v18h18' }), e('path', { d: 'M7 15l4-6 4 3 5-9' })
+                )
+              ),
+              e('div', {},
+                e('h3', { className: `text-[15px] font-black text-white uppercase tracking-[0.3em] leading-none mb-2` }, 'Mathematical Trend & Regime Detection'),
+                e('div', { className: 'flex items-center gap-2' },
+                  ['hmm', 'garch', 'combined'].map(v => e('button', {
+                    key: v,
+                    onClick: () => setRegimeView(v),
+                    className: `text-[8px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded transition-all ${regimeView === v ? 'bg-purple-400 text-[#050816] shadow-[0_0_16px_rgba(192,132,252,0.4)]' : 'text-slate-500 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10'}`
+                  }, v))
+                )
+              )
+            ),
+            e('div', { className: `flex items-center gap-4 px-4 py-2.5 rounded-xl bg-white/5 border border-white/5` },
+              isAnalyzing ? 
+                e('div', { className: 'flex items-center gap-3' },
+                  e('div', { className: 'w-2 h-2 rounded-full bg-purple-400 animate-spin border-b-2 border-transparent' }),
+                  e('span', { className: 'text-[10px] font-black text-purple-400 uppercase tracking-widest tabular-nums' }, `Calibrating: ${analysisTimeLeft}s`)
+                ) :
+                e('div', { className: 'flex items-center gap-5' },
+                  e('div', { className: 'flex items-center gap-2' },
+                    e('div', { className: 'w-1.5 h-1.5 rounded-full bg-slate-500' }),
+                    e('span', { className: `text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] tabular-nums` }, `Idle: ${timeUntilUpdate}s`)
+                  ),
+                  e('div', { className: 'flex items-center gap-2' },
+                    e('div', { className: 'w-2 h-2 rounded-full bg-brand-green animate-pulse shadow-[0_0_8px_#22c55e]' }),
+                    e('span', { className: `text-[10px] font-black text-slate-300 uppercase tracking-tight` }, 'Core Ready')
+                  )
+                )
+            )
+          ),
+
+          e('div', { className: 'relative z-10 flex flex-col gap-8' },
+            // HMM/GARCH Grid
+            e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-1' },
+              (regimeView === 'combined' ? [...hmmData, ...garchData] : (regimeView === 'hmm' ? hmmData : garchData))
+                .map((m, idx) => e(StatArbRow, { key: m.name + idx, metric: m, index: idx, isAnalyzing, hasRevealed }))
+            ),
+
+            // Regime Verdict
+            e('div', { className: 'p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col md:flex-row items-center gap-6 shadow-inner' },
+              e('div', { className: 'flex items-center gap-3 min-w-[220px] pr-6 border-r border-white/5' },
+                e('div', { className: `w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_10px_#c084fc] animate-pulse` }),
+                e('h4', { className: 'text-[10px] font-black text-white uppercase tracking-[0.2em] leading-none' }, 
+                  regimeView === 'hmm' ? 'State Transition Signal' : regimeView === 'garch' ? 'Volatility Forecast Signal' : 'Combined Analysis'
+                )
+              ),
+              e('div', { className: 'flex-1' },
+                e('p', { className: 'text-[10px] leading-relaxed text-slate-400 font-bold font-mono' },
+                  regimeView === 'hmm' ? 
+                    `Hidden Markov analysis for ${ticker} scans for structural breakpoints — Bayesian evidence of a switch between hidden volatility/trend states.` :
+                  regimeView === 'garch' ? 
+                    `GARCH-style volatility modeling for ${ticker} forecasts the forward volatility profile used for option pricing and position risk sizing.` :
+                    `Combined HMM and GARCH intelligence for ${ticker} confirms a REGIME-SHIFT node. State-transition probability is cross-checked against the conditional volatility forecast for sizing and trend-signal confidence.`
+                )
+              ),
+              e('div', { className: 'flex items-center gap-3 pl-6 border-l border-white/5' },
+                e('span', { className: `text-[9px] font-black text-slate-500 uppercase tracking-widest` }, 'Model:'),
+                e('div', { className: 'px-3 py-1.5 rounded-lg bg-purple-400/5 border border-purple-400/20' },
+                  e(FinanceTerm, { 
+                    term: regimeView === 'hmm' ? 'HMM-STATE' : regimeView === 'garch' ? 'GARCH-VOL' : 'REGIME-SHIFT', 
+                    definition: regimeView === 'hmm' ? 'A Bayesian model that detects when an asset transitions between hidden structural states, such as low-volatility stability and aggressive trending.' : regimeView === 'garch' ? 'A model of generalized autoregressive conditional heteroskedasticity used to forecast forward volatility for pricing and risk sizing.' : 'A combined regime-detection read pairing hidden-state transition probability with conditional volatility forecasting.',
+                    isDay: false 
+                  })
+                )
+              )
+            )
+          ),
+          // Subtle decorative effect
+          e('div', { className: 'absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none', style: { backgroundImage: 'radial-gradient(circle at 0% 0%, #c084fc 0%, transparent 60%)' } })
         )
       )
     );
