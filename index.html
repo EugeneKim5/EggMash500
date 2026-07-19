@@ -1596,7 +1596,7 @@
         <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_m6cuL6.json" background="transparent" speed="2" loop autoplay class="absolute inset-0 h-full w-full opacity-90 scale-110"></lottie-player>
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(5,8,22,0.4)_100%)]"></div>
       </div>
-      <h2 id="loader-status" class="pixel-title text-2xl font-semibold tracking-[0.2em] text-brand-yellow">BOOTING...</h2>
+      <h2 id="loader-status" class="pixel-title text-2xl font-semibold text-brand-yellow"><span id="loader-status-text" class="tracking-[0.2em]" style="display:inline-block;">BOOTING...</span></h2>
       <div class="mx-auto mt-8 h-6 w-full max-w-xs border-2 border-white/10 bg-transparent p-1">
         <div id="loader-progress" class="h-full w-0 bg-brand-yellow shadow-[0_0_15px_rgba(250,204,21,0.4)] transition-all duration-300 ease-out"></div>
       </div>
@@ -1919,28 +1919,33 @@
   const loaderStatus   = document.getElementById('loader-status');
   const loaderLog      = document.getElementById('loader-log');
   const loaderTilt     = document.getElementById('loader-tilt-container');
+  const loaderStatusText = document.getElementById('loader-status-text');
 
-  // Auto-fit the loader status text so long messages stay on one line
-  // instead of being clipped by the ellipsis overflow rule.
-  const LOADER_STATUS_MAX_FONT = 24; // px, matches text-2xl
-  const LOADER_STATUS_MIN_FONT = 12; // px, floor before we'd otherwise truncate
+  // Fit the loader status text on one line WITHOUT changing its font size.
+  // Step 1: tighten letter-spacing (the pixel font's wide tracking is the
+  // main cause of overflow). Step 2 (rare, very long strings on narrow
+  // screens): apply a horizontal-only squeeze via scaleX, which compresses
+  // character width but leaves font-size/height completely untouched.
+  const LOADER_STATUS_MAX_TRACKING = 0.2; // em, original tracking-[0.2em]
+  const LOADER_STATUS_MIN_TRACKING = 0;   // em, floor before falling back to scaleX
   function fitLoaderStatus() {
-    if (!loaderStatus) return;
-    // loaderStatus is a block element that already fills its parent's
-    // content box (padding excluded), so its own clientWidth is the
-    // true available width for the text — using the parent's clientWidth
-    // instead overestimates by the parent's horizontal padding and lets
-    // long strings keep getting ellipsis-clipped.
-    let fontSize = LOADER_STATUS_MAX_FONT;
-    loaderStatus.style.fontSize = fontSize + 'px';
+    if (!loaderStatus || !loaderStatusText) return;
+    loaderStatusText.style.transform = 'none';
+    let tracking = LOADER_STATUS_MAX_TRACKING;
+    loaderStatusText.style.letterSpacing = tracking + 'em';
     const available = loaderStatus.clientWidth;
-    while (loaderStatus.scrollWidth > available && fontSize > LOADER_STATUS_MIN_FONT) {
-      fontSize -= 1;
-      loaderStatus.style.fontSize = fontSize + 'px';
+    while (loaderStatusText.scrollWidth > available && tracking > LOADER_STATUS_MIN_TRACKING) {
+      tracking = Math.max(LOADER_STATUS_MIN_TRACKING, +(tracking - 0.02).toFixed(3));
+      loaderStatusText.style.letterSpacing = tracking + 'em';
+    }
+    if (loaderStatusText.scrollWidth > available) {
+      const ratio = available / loaderStatusText.scrollWidth;
+      loaderStatusText.style.transformOrigin = 'center';
+      loaderStatusText.style.transform = `scaleX(${ratio})`;
     }
   }
   function setLoaderStatus(text) {
-    loaderStatus.textContent = text;
+    loaderStatusText.textContent = text;
     fitLoaderStatus();
   }
   window.addEventListener('resize', () => { if (isLoading) fitLoaderStatus(); });
